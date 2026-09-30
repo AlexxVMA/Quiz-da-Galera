@@ -9,34 +9,43 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#E6E9FF; --paper:#FFFFFF; --ink:#15173D; --muted:#555A8C; --line:#15173D; --shade:#15173D;
-  --accent:#5B3DF5; --on-accent:#FFFFFF; --sun:#FFD23F; --on-sun:#15173D;
-  --ok:#0B8F6D; --ok-bg:#C9F5E6; --bad:#D92D22; --bad-bg:#FFD9D5;
+/* Paletas: roxo (padrão), oceano e noite. O botão de cores fica no rodapé. */
+:root, :root[data-palette="roxo"]{
+  --bg:#ECE9FF; --paper:#FFFFFF; --ink:#191540; --muted:#58558A; --line:#191540; --shade:#191540;
+  --accent:#5B3DF5; --on-accent:#FFFFFF; --btn:#19C39B; --on-btn:#062B23; --soft:#DCD5FF; --on-soft:#191540;
+  --ok:#08704F; --ok-bg:#C9F5E6; --bad:#B32219; --bad-bg:#FFD9D5;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0D0F2E; --paper:#191C4B; --ink:#F1F2FF; --muted:#A5A9DD; --line:#EDEEFF; --shade:#04051A;
-    --accent:#8B75FF; --on-accent:#0D0F2E; --ok:#3DDBB0; --ok-bg:#0F3D36; --bad:#FF7A70; --bad-bg:#4A1B22;
-  }
+:root[data-palette="oceano"]{
+  --bg:#E2F3F5; --paper:#FFFFFF; --ink:#0A2A38; --muted:#42606E; --line:#0A2A38; --shade:#0A2A38;
+  --accent:#0E7C8B; --on-accent:#FFFFFF; --btn:#FF6F59; --on-btn:#2A0B05; --soft:#C4E9EE; --on-soft:#0A2A38;
+  --ok:#086348; --ok-bg:#CDF3E6; --bad:#A8241B; --bad-bg:#FFDCD6;
 }
-:root[data-theme="dark"]{
-  --bg:#0D0F2E; --paper:#191C4B; --ink:#F1F2FF; --muted:#A5A9DD; --line:#EDEEFF; --shade:#04051A;
-  --accent:#8B75FF; --on-accent:#0D0F2E; --ok:#3DDBB0; --ok-bg:#0F3D36; --bad:#FF7A70; --bad-bg:#4A1B22;
+:root[data-palette="noite"]{
+  --bg:#0E0B1F; --paper:#1A1633; --ink:#F3F0FF; --muted:#B4AEDB; --line:#F3F0FF; --shade:#05030F;
+  --accent:#FF4FA3; --on-accent:#1A0510; --btn:#5CF2C0; --on-btn:#062B23; --soft:#3A1F45; --on-soft:#F3F0FF;
+  --ok:#4DE0B0; --ok-bg:#0E3B31; --bad:#FF8A80; --bad-bg:#4A1B2A;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
 .wrap{max-width:520px;margin:0 auto;padding:20px 16px 24px;display:grid;gap:18px}
+.home{display:grid;gap:18px;grid-template-areas:"main" "side"}
+.home .main{grid-area:main;display:grid;gap:18px;align-content:start}
+.home .side{grid-area:side;display:grid;gap:18px;align-content:start}
+@media (min-width:860px){
+  .wrap.wide{max-width:1000px}
+  .home{grid-template-columns:340px 1fr;grid-template-areas:"side main";align-items:start}
+  .home .side{position:sticky;top:16px}
+}
 h1,h2{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;margin:0;letter-spacing:-0.02em;line-height:1.05}
 h1{font-size:clamp(2.1rem,8vw,3rem);font-weight:800}
 h2{font-size:1.5rem;font-weight:800}
 p{margin:0}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.hot :focus-visible{outline-color:var(--sun)}
+.hot :focus-visible{outline-color:var(--btn)}
 .stack{display:grid;gap:12px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .center{text-align:center;justify-items:center}
@@ -51,20 +60,25 @@ p{margin:0}
 .err{color:var(--bad);font-weight:600}
 .card{background:var(--paper);border:3px solid var(--line);border-radius:18px;box-shadow:5px 5px 0 var(--shade);padding:18px}
 .card.hot{background:var(--accent);color:var(--on-accent)}
-.btn{font:700 1rem Figtree,system-ui,sans-serif;min-height:48px;padding:0 20px;border:3px solid var(--line);border-radius:14px;background:var(--sun);color:var(--on-sun);box-shadow:3px 3px 0 var(--shade);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.btn{font:700 1rem Figtree,system-ui,sans-serif;min-height:48px;padding:0 20px;border:3px solid var(--line);border-radius:14px;background:var(--btn);color:var(--on-btn);box-shadow:3px 3px 0 var(--shade);cursor:pointer;transition:transform .08s,box-shadow .08s}
 .btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shade)}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.big{min-height:56px;font-size:1.1rem;width:100%}
 .btn.alt{background:var(--paper);color:var(--ink)}
+.btnrow{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.flash{background:var(--soft);color:var(--on-soft);border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:600}
+.palettes{display:flex;justify-content:center;gap:10px;margin:0 0 12px}
+.palettes button{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);background:var(--sw);cursor:pointer;padding:0}
+.palettes button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--ink)}
 .link{font:600 .95rem Figtree,system-ui,sans-serif;min-height:44px;padding:0 6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer}
 .inp{width:100%;min-height:56px;font:600 1.15rem Figtree,system-ui,sans-serif;padding:0 16px;border:3px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink)}
 .inp::placeholder{color:var(--muted);font-weight:400}
 .chip{min-height:44px;padding:0 16px;border:3px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:700 1rem Figtree,system-ui,sans-serif;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--sun);color:var(--on-sun)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .seg{display:flex;gap:8px;flex-wrap:wrap}
 .board{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .board li{display:grid;grid-template-columns:2rem 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:2px solid var(--line);border-radius:12px}
-.board li.me{background:var(--sun);color:var(--on-sun)}
+.board li.me{background:var(--soft);color:var(--on-soft)}
 .board .rk{font:800 1.2rem "Bricolage Grotesque",Figtree,sans-serif}
 .board .nm{font-weight:700;overflow-wrap:anywhere}
 .board .dy{font-size:.85rem;opacity:.8}
@@ -105,6 +119,11 @@ p{margin:0}
 <body>
 <main class="wrap" id="app"><p class="sub">Carregando...</p></main>
 <footer class="credits">
+  <div class="palettes" role="group" aria-label="Cores do site">
+    <button data-a="palette" data-v="roxo" aria-label="Cores: roxo" aria-pressed="true" style="--sw:#5B3DF5"></button>
+    <button data-a="palette" data-v="oceano" aria-label="Cores: oceano" aria-pressed="false" style="--sw:#0E7C8B"></button>
+    <button data-a="palette" data-v="noite" aria-label="Cores: noite" aria-pressed="false" style="--sw:#FF4FA3"></button>
+  </div>
   Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Wikidata, Wikimedia Commons e TheMealDB.
   Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
 </footer>
@@ -116,7 +135,7 @@ p{margin:0}
 /* ---------- Configuração (chaves públicas: podem ficar no site) ---------- */
 const SUPABASE_URL = 'https://gjcttqcyoccxbjwdzukr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7FSEwMq4vkF_Lf12LVHMNg_C2NTq3xk';
-const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', celebridades:'Celebridades', animes:'Animes', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
+const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', animes:'Animes', celebridades:'Atores e atrizes', artistas:'Artistas e esportistas', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
 const CAT_KEYS = Object.keys(CATS);
 
 /* ---------- Utilidades ---------- */
@@ -154,12 +173,25 @@ function friendly(e) {
 }
 
 /* ---------- Estado ---------- */
-let S = { screen: 'boot', user: null, home: null, authMode: 'login', notice: '', free: { cats: allOn(), n: 10 }, duelCats: allOn() };
+let S = { screen: 'boot', user: null, home: null, authMode: 'login', notice: '', free: { cats: allOn(), n: 10 }, duelCats: allOn(), joinCats: allOn() };
 let G = null;   // partida do dia / livre em andamento
 let D = null;   // duelo em andamento
 let raf = 0, pollTimer = 0, sugTimer = 0, sugSeq = 0;
 
 function stopAll() { cancelAnimationFrame(raf); clearInterval(pollTimer); pollTimer = 0; }
+
+/* ---------- Cores ---------- */
+function applyPalette(p) {
+  document.documentElement.setAttribute('data-palette', p);
+  try { localStorage.setItem('qz_palette', p); } catch (e) {}
+  document.querySelectorAll('[data-a="palette"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === p)));
+  const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = { roxo: '#5B3DF5', oceano: '#0E7C8B', noite: '#0E0B1F' }[p];
+}
+(function () {
+  let p = null; try { p = localStorage.getItem('qz_palette'); } catch (e) {}
+  if (!['roxo', 'oceano', 'noite'].includes(p)) p = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'noite' : 'roxo';
+  applyPalette(p);
+})();
 
 /* ---------- Componentes ---------- */
 function questionBlock(q) {
@@ -178,7 +210,7 @@ function answerBox(q) {
     <input id="ans" class="inp" ${numeric ? 'inputmode="numeric"' : ''} placeholder="${numeric ? 'Digite o número' : 'Digite a resposta'}"
       autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Sua resposta">
     <ul id="sugg" class="sugg"></ul>
-    <button class="btn big" data-a="submit">Responder</button>
+    <div class="btnrow"><button class="btn big" data-a="submit">Responder</button><button class="btn alt big" data-a="skip">Pular</button></div>
   </section>`;
 }
 function chips(obj, action) {
@@ -217,36 +249,42 @@ function vHome() {
   else dailyBlock = `<button class="btn big" data-a="daily">Jogar a partida do dia</button><p class="sub">Uma vez por dia. Se sair no meio, o tempo continua correndo.</p>`;
   const resume = sessionStorage.getItem('qz_duel');
   return `
-  <header class="hdr">
-    <h1 class="mark">Quiz da Galera</h1>
-    <div class="row"><span>Jogando como <b>${esc(S.user.name)}</b></span><button class="link" data-a="logout">Sair da conta</button></div>
-  </header>
-  ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
-  <section class="card hot stack">
-    <h2>Partida do dia</h2>
-    <p>10 perguntas, as mesmas para todo mundo, 20 segundos cada.</p>
-    ${dailyBlock}
-  </section>
-  <section class="card stack">
-    <h2>Modo livre</h2>
-    <p>Escolha os temas e jogue sozinho, quantas vezes quiser.</p>
-    <button class="btn" data-a="freesetup">Montar partida</button>
-  </section>
-  <section class="card stack">
-    <h2>Duelo online</h2>
-    <p>Um contra um, cada um no seu celular, com as mesmas perguntas ao mesmo tempo.</p>
-    <div class="actions">
-      <button class="btn" data-a="duelsetup">Criar ou entrar em uma sala</button>
-      ${resume ? `<button class="btn alt" data-a="duelresume">Voltar ao duelo (${esc(resume)})</button>` : ''}
+  <div class="home">
+    <aside class="side">
+      <section class="card stack">
+        <h2>Placar da semana</h2>
+        <p class="sub">Só conta a partida do dia. Zera na segunda-feira, ${left === 1 ? 'amanhã' : `daqui a ${left} dias`}.</p>
+        ${lb.rows.length
+          ? `<ol class="board">${lb.rows.slice(0, 15).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}</span><span class="dy">${r.days} ${r.days === 1 ? 'dia' : 'dias'}</span><span class="pt">${fmt(r.points)}</span></li>`).join('')}</ol>`
+          : `<p class="empty">Ninguém pontuou nesta semana ainda. Jogue a partida do dia para abrir o placar.</p>`}
+      </section>
+    </aside>
+    <div class="main">
+      <header class="hdr">
+        <h1 class="mark">Quiz da Galera</h1>
+        <div class="row"><span>Jogando como <b>${esc(S.user.name)}</b></span><button class="link" data-a="logout">Sair da conta</button></div>
+      </header>
+      ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+      <section class="card hot stack">
+        <h2>Partida do dia</h2>
+        <p>10 perguntas, as mesmas para todo mundo. Cada uma tem 20 segundos (mais tempo nas de leitura).</p>
+        ${dailyBlock}
+      </section>
+      <section class="card stack">
+        <h2>Modo livre</h2>
+        <p>Escolha os temas e jogue sozinho, quantas vezes quiser.</p>
+        <button class="btn" data-a="freesetup">Montar partida</button>
+      </section>
+      <section class="card stack">
+        <h2>Duelo online</h2>
+        <p>Um contra um, cada um no seu celular e cada um escolhendo os seus temas.</p>
+        <div class="actions">
+          <button class="btn" data-a="duelsetup">Criar ou entrar em uma sala</button>
+          ${resume ? `<button class="btn alt" data-a="duelresume">Voltar ao duelo (${esc(resume)})</button>` : ''}
+        </div>
+      </section>
     </div>
-  </section>
-  <section class="card stack">
-    <h2>Placar da semana</h2>
-    <p class="sub">Só conta a partida do dia. Zera na segunda-feira, ${left === 1 ? 'amanhã' : `daqui a ${left} dias`}.</p>
-    ${lb.rows.length
-      ? `<ol class="board">${lb.rows.slice(0, 15).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}</span><span class="dy">${r.days} ${r.days === 1 ? 'dia' : 'dias'}</span><span class="pt">${fmt(r.points)}</span></li>`).join('')}</ol>`
-      : `<p class="empty">Ninguém pontuou nesta semana ainda. Jogue a partida do dia para abrir o placar.</p>`}
-  </section>`;
+  </div>`;
 }
 
 function vFreeSetup() {
@@ -269,14 +307,16 @@ function vDuelSetup() {
   ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
   <section class="card stack">
     <h2>Criar sala</h2>
-    <p class="sub">Escolha os temas. Você recebe um código para mandar ao amigo.</p>
+    <p class="sub">Escolha os seus temas. Metade das perguntas vem deles; a outra metade vem dos temas que o seu amigo escolher.</p>
     ${chips(S.duelCats, 'dcat')}
     <button class="btn big" data-a="duelcreate" ${chosen(S.duelCats).length ? '' : 'disabled'}>Criar sala</button>
   </section>
   <section class="card stack">
     <h2>Entrar em uma sala</h2>
     <input id="joincode" class="inp" maxlength="5" placeholder="Código de 5 letras" autocomplete="off" autocapitalize="characters">
-    <button class="btn big" data-a="duelenter">Entrar</button>
+    <p class="sub">Seus temas (metade das perguntas vem dos seus, metade dos temas de quem criou a sala):</p>
+    ${chips(S.joinCats, 'jcat')}
+    <button class="btn big" data-a="duelenter" ${chosen(S.joinCats).length ? '' : 'disabled'}>Entrar</button>
   </section>`;
 }
 
@@ -284,6 +324,7 @@ function vAsk() {
   const q = G.q;
   return `
   <header class="row top"><button class="link" data-a="home">Sair</button><span class="prog">Pergunta ${G.index + 1} de ${G.total}</span><span class="pts">${fmt(G.score)} pts</span></header>
+  ${G.flash ? `<p class="flash" role="status">${esc(G.flash)}</p>` : ''}
   <div class="ticker"><b id="worth">1.000</b><span>pontos valendo agora</span></div>
   <div class="bar" aria-hidden="true"><i id="bar"></i></div>
   ${questionBlock(q)}
@@ -308,6 +349,7 @@ function vResult() {
   const pos = G.mode === 'daily' && S.home ? (S.home.board.rows.findIndex(x => x.me) + 1) : 0;
   return `
   <h1>Partida encerrada</h1>
+  ${G.flash ? `<p class="flash" role="status">${esc(G.flash)}</p>` : ''}
   <div class="card hot stack">
     <b class="big-n">${fmt(r.score)}</b>
     <p>pontos, ${r.correct} de ${r.total} certas</p>
@@ -353,11 +395,11 @@ function vDuel(st) {
     ${st.answered ? sentBox() : answerBox(st.question)}`;
   if (st.status === 'reveal') {
     const mine = st[m.me + '_result'], theirs = st[m.opp + '_result'];
-    const line = (name, r) => r ? `${esc(name)}: ${r.correct ? 'acertou' : 'errou'} (+${fmt(r.points)})${r.guess ? `, respondeu “${esc(r.guess)}”` : ''}` : `${esc(name)}: não respondeu`;
+    const line = (name, r) => !r ? `${esc(name)}: não respondeu` : (r.guess === '' ? `${esc(name)}: pulou` : `${esc(name)}: ${r.correct ? 'acertou' : 'errou'} (+${fmt(r.points)})${r.guess ? `, respondeu “${esc(r.guess)}”` : ''}`);
     return `
     ${duelHead(st)}
     <section class="verdict ${mine && mine.correct ? 'ok' : 'bad'}" role="status">
-      <h2>${mine && mine.correct ? `Acertou! +${fmt(mine.points)}` : (mine ? 'Errou' : 'Sem resposta')}</h2>
+      <h2>${mine && mine.correct ? `Acertou! +${fmt(mine.points)}` : (mine ? (mine.guess === '' ? 'Você pulou' : 'Errou') : 'Sem resposta')}</h2>
       <p>Resposta: <b>${esc(st.answer)}</b></p>
       <p class="sub">${line(m.meName, mine)}</p>
       <p class="sub">${line(m.oppName, theirs)}</p>
@@ -375,7 +417,7 @@ function vDuel(st) {
     </div>
     <div class="actions"><button class="btn" data-a="duelsetup">Novo duelo</button><button class="btn alt" data-a="home">Voltar ao início</button></div>`;
 }
-const sentBox = () => `<section class="card stack center" id="answerarea"><p><b>Resposta enviada!</b></p><p class="sub">Aguarde o tempo acabar para ver o resultado.</p></section>`;
+const sentBox = skipped => `<section class="card stack center" id="answerarea"><p><b>${skipped ? 'Você pulou.' : 'Resposta enviada!'}</b></p><p class="sub">Aguarde o tempo acabar para ver o resultado.</p></section>`;
 
 function drawDuel(st) {
   const key = [st.status, st.index ?? '', st.status === 'waiting' ? '' : (st.guest || '')].join('|');
@@ -386,7 +428,7 @@ function drawDuel(st) {
     cancelAnimationFrame(raf);
     $('app').innerHTML = vDuel(st);
     const first = document.querySelector('[data-primary]');
-    if (st.status === 'question') { const i = $('ans'); if (i) i.focus(); startDuelTimer(20); }
+    if (st.status === 'question') { const i = $('ans'); if (i) i.focus(); startDuelTimer(st.limit || 20); }
     else if (st.status === 'reveal') startDuelTimer(5);
     else if (st.status === 'countdown') startDuelTimer(6);
     if (first) first.focus();
@@ -413,7 +455,13 @@ function startDuelTimer(total) {
 async function pollDuel() {
   if (!D) return;
   try { drawDuel(D.st = await rpc('duel_state', { p_code: D.code })); }
-  catch (e) { if (/sala não encontrada/i.test(e.message || '')) { sessionStorage.removeItem('qz_duel'); goHome(friendly(e)); } }
+  catch (e) {
+    if (/sala não encontrada/i.test(e.message || '')) { sessionStorage.removeItem('qz_duel'); goHome(friendly(e)); }
+    else if (D && !D.st) {   // primeira carga falhou: mostra o problema e uma saída, em vez de ficar carregando para sempre
+      stopAll();
+      $('app').innerHTML = `<p class="err" role="alert">${esc(friendly(e))}</p><button class="btn" data-a="duelleave">Voltar</button>`;
+    }
+  }
 }
 async function openDuel(code) {
   stopAll();
@@ -426,13 +474,12 @@ async function openDuel(code) {
 }
 async function duelSubmit() {
   const el = $('ans'); if (!el || !D || D.sent) return;
-  const v = el.value.trim(); if (!v) return;
+  const v = el.value.trim();            // vazio = pular
   D.sent = true;
-  const idx = D.st.index;
   el.disabled = true;
   try {
-    const r = await rpc('duel_answer', { p_code: D.code, p_idx: idx, p_guess: v });
-    $('answerarea').outerHTML = r.accepted ? sentBox() : `<section class="card stack center" id="answerarea"><p><b>Tempo esgotado.</b></p></section>`;
+    const r = await rpc('duel_answer', { p_code: D.code, p_idx: D.st.index, p_guess: v });
+    $('answerarea').outerHTML = r.accepted ? sentBox(v === '') : `<section class="card stack center" id="answerarea"><p><b>Tempo esgotado.</b></p></section>`;
   } catch (e) { D.sent = false; el.disabled = false; alert(friendly(e)); }
 }
 
@@ -441,11 +488,13 @@ const VIEWS = { auth: vAuth, home: vHome, free: vFreeSetup, duelsetup: vDuelSetu
 
 function render() {
   cancelAnimationFrame(raf);
+  $('app').classList.toggle('wide', S.screen === 'home');
   $('app').innerHTML = VIEWS[S.screen]();
   window.scrollTo(0, 0);
   if (S.screen === 'ask') {
+    G.flash = null;
     const i = $('ans'); if (i) i.focus();
-    const total = 20, bar = $('bar'), worth = $('worth');
+    const total = G.limit || 20, bar = $('bar'), worth = $('worth');
     const tick = () => {
       const left = Math.max(0, (G.endAt - performance.now()) / 1000);
       bar.style.width = (left / total * 100) + '%';
@@ -481,18 +530,22 @@ async function nextQuestion() {
     S.screen = 'result'; render(); return;
   }
   G.q = r.question; G.index = r.index; G.total = r.total; G.score = r.score;
+  G.limit = r.limit || 20;
   G.endAt = performance.now() + r.seconds_left * 1000;
   G.busy = false;
   S.screen = 'ask'; render();
 }
 
-async function answerRun(guess) {
+async function answerRun(guess, skip) {
   if (!G || G.busy) return;
   G.busy = true; cancelAnimationFrame(raf);
   try {
     const a = await rpc('run_answer', { p_run: G.runId, p_guess: guess });
     G.last = a; G.score = a.score;
-    S.screen = 'feedback'; render();
+    if (skip && !a.correct) {           // pular vai direto para a próxima, avisando qual era a resposta
+      G.flash = `Você pulou. A resposta era: ${a.answer}`;
+      await nextQuestion();
+    } else { S.screen = 'feedback'; render(); }
   } catch (e) {
     try { await nextQuestion(); } catch (e2) { goHome(friendly(e2)); }
   } finally { if (G) G.busy = false; }
@@ -546,7 +599,10 @@ document.addEventListener('click', async e => {
       case 'fcat': S.free.cats[v] = !S.free.cats[v]; render(); break;
       case 'fnum': S.free.n = +v; render(); break;
       case 'startfree': startRun('free', await rpc('start_free', { p_categories: chosen(S.free.cats), p_total: S.free.n })); break;
-      case 'submit': { const el = $('ans'); if (el && S.screen === 'ask') { const val = el.value.trim(); if (val) answerRun(val); } else duelSubmit(); break; }
+      case 'submit': { const el = $('ans'); if (el && S.screen === 'ask') { const val = el.value.trim(); if (val) answerRun(val); else answerRun('', true); } else duelSubmit(); break; }
+      case 'skip': if (S.screen === 'ask') answerRun('', true); else { const el = $('ans'); if (el) el.value = ''; duelSubmit(); } break;
+      case 'palette': applyPalette(v); break;
+      case 'jcat': S.joinCats[v] = !S.joinCats[v]; render(); break;
       case 'pick': { const i = $('ans'); if (i) { i.value = v; $('sugg').innerHTML = ''; i.focus(); } break; }
       case 'next': await nextQuestion(); break;
       case 'report': { t.disabled = true; try { await rpc('report_question', { p_id: +t.dataset.id }); t.textContent = 'Obrigado! Vamos revisar essa pergunta.'; } catch (e2) { t.disabled = false; } break; }
@@ -562,7 +618,7 @@ document.addEventListener('click', async e => {
       case 'duelenter': {
         const code = ($('joincode').value || '').trim().toUpperCase();
         if (code.length < 4) { S.notice = 'Digite o código da sala.'; render(); break; }
-        await rpc('duel_join', { p_code: code }); openDuel(code); break;
+        await rpc('duel_join', { p_code: code, p_categories: chosen(S.joinCats) }); openDuel(code); break;
       }
       case 'duelresume': openDuel(sessionStorage.getItem('qz_duel')); break;
       case 'duelleave': goHome(); break;
@@ -602,7 +658,7 @@ document.addEventListener('input', e => {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const id = e.target.id;
-  if (id === 'ans') { e.preventDefault(); if (S.screen === 'ask') { const val = e.target.value.trim(); if (val) answerRun(val); } else duelSubmit(); }
+  if (id === 'ans') { e.preventDefault(); if (S.screen === 'ask') { const val = e.target.value.trim(); answerRun(val, !val); } else duelSubmit(); }
   else if (id === 'nick') { e.preventDefault(); $('pw').focus(); }
   else if (id === 'pw') { e.preventDefault(); doAuth(); }
   else if (id === 'joincode') { e.preventDefault(); document.querySelector('[data-a="duelenter"]').click(); }
