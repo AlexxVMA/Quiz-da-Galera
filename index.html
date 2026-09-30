@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5B3DF5">
+<title>Quiz da Galera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6E9FF; --paper:#FFFFFF; --ink:#15173D; --muted:#555A8C; --line:#15173D; --shade:#15173D;
+  --accent:#5B3DF5; --on-accent:#FFFFFF; --sun:#FFD23F; --on-sun:#15173D;
+  --ok:#0B8F6D; --ok-bg:#C9F5E6; --bad:#D92D22; --bad-bg:#FFD9D5;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D0F2E; --paper:#191C4B; --ink:#F1F2FF; --muted:#A5A9DD; --line:#EDEEFF; --shade:#04051A;
+    --accent:#8B75FF; --on-accent:#0D0F2E; --ok:#3DDBB0; --ok-bg:#0F3D36; --bad:#FF7A70; --bad-bg:#4A1B22;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D0F2E; --paper:#191C4B; --ink:#F1F2FF; --muted:#A5A9DD; --line:#EDEEFF; --shade:#04051A;
+  --accent:#8B75FF; --on-accent:#0D0F2E; --ok:#3DDBB0; --ok-bg:#0F3D36; --bad:#FF7A70; --bad-bg:#4A1B22;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 24px;display:grid;gap:18px}
+h1,h2{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;margin:0;letter-spacing:-0.02em;line-height:1.05}
+h1{font-size:clamp(2.1rem,8vw,3rem);font-weight:800}
+h2{font-size:1.5rem;font-weight:800}
+p{margin:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.hot :focus-visible{outline-color:var(--sun)}
+.stack{display:grid;gap:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.center{text-align:center;justify-items:center}
+.lead{font-size:1.15rem;margin-top:10px;max-width:34ch}
+.mark{font-size:clamp(1.8rem,7vw,2.4rem)}
+.hdr{display:grid;gap:6px}
+.sub{color:var(--muted);font-size:.95rem}
+.hot .sub{color:inherit;opacity:.85}
+.fine{color:var(--muted);font-size:.85rem;text-align:center}
+.lbl{font-weight:700}
+.empty{color:var(--muted)}
+.err{color:var(--bad);font-weight:600}
+.card{background:var(--paper);border:3px solid var(--line);border-radius:18px;box-shadow:5px 5px 0 var(--shade);padding:18px}
+.card.hot{background:var(--accent);color:var(--on-accent)}
+.btn{font:700 1rem Figtree,system-ui,sans-serif;min-height:48px;padding:0 20px;border:3px solid var(--line);border-radius:14px;background:var(--sun);color:var(--on-sun);box-shadow:3px 3px 0 var(--shade);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shade)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.big{min-height:56px;font-size:1.1rem;width:100%}
+.btn.alt{background:var(--paper);color:var(--ink)}
+.link{font:600 .95rem Figtree,system-ui,sans-serif;min-height:44px;padding:0 6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer}
+.inp{width:100%;min-height:56px;font:600 1.15rem Figtree,system-ui,sans-serif;padding:0 16px;border:3px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink)}
+.inp::placeholder{color:var(--muted);font-weight:400}
+.chip{min-height:44px;padding:0 16px;border:3px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:700 1rem Figtree,system-ui,sans-serif;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--sun);color:var(--on-sun)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.board{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.board li{display:grid;grid-template-columns:2rem 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:2px solid var(--line);border-radius:12px}
+.board li.me{background:var(--sun);color:var(--on-sun)}
+.board .rk{font:800 1.2rem "Bricolage Grotesque",Figtree,sans-serif}
+.board .nm{font-weight:700;overflow-wrap:anywhere}
+.board .dy{font-size:.85rem;opacity:.8}
+.board .pt{font-weight:800;font-variant-numeric:tabular-nums}
+.top{gap:8px}
+.prog{font-weight:700}
+.pts{font-weight:800;font-variant-numeric:tabular-nums}
+.turn{font-weight:700;text-align:center}
+.ticker{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ticker b{font:800 clamp(3.5rem,18vw,5.5rem)/1 "Bricolage Grotesque",Figtree,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
+.ticker span{color:var(--muted);font-weight:600}
+.bar{height:18px;border:3px solid var(--line);border-radius:999px;background:var(--paper);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--ok)}
+.bar i.low{background:var(--bad)}
+.tag{justify-self:start;padding:2px 12px;border:2px solid var(--line);border-radius:999px;font-weight:700;font-size:.9rem}
+.prompt{font:700 1.3rem/1.25 "Bricolage Grotesque",Figtree,sans-serif}
+.clue{font:600 1.05rem/1.45 Figtree,sans-serif}
+.qimg{display:block;width:100%;max-height:340px;object-fit:contain;border:3px solid var(--line);border-radius:14px;background:var(--bg)}
+.sugg{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.sugg:empty{display:none}
+.sugg button{width:100%;text-align:left;min-height:44px;padding:0 14px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:600 1rem Figtree,sans-serif;cursor:pointer}
+.verdict{border:3px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:8px}
+.verdict.ok{background:var(--ok-bg);border-color:var(--ok)}
+.verdict.ok h2{color:var(--ok)}
+.verdict.bad{background:var(--bad-bg);border-color:var(--bad)}
+.verdict.bad h2{color:var(--bad)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.big-n{display:block;font:800 clamp(2.6rem,12vw,3.6rem)/1 "Bricolage Grotesque",Figtree,sans-serif;font-variant-numeric:tabular-nums;margin:6px 0}
+.code{font:800 clamp(2.6rem,14vw,4rem)/1 "Bricolage Grotesque",Figtree,sans-serif;letter-spacing:.12em}
+.actions{display:grid;gap:10px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scoreline{display:flex;justify-content:space-between;gap:12px;font-weight:700}
+.credits{max-width:520px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:.78rem;text-align:center}
+.credits a{color:inherit}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"><p class="sub">Carregando...</p></main>
+<footer class="credits">
+  Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Wikidata, Wikimedia Commons e TheMealDB.
+  Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+
+/* ---------- Configuração (chaves públicas: podem ficar no site) ---------- */
+const SUPABASE_URL = 'https://gjcttqcyoccxbjwdzukr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_7FSEwMq4vkF_Lf12LVHMNg_C2NTq3xk';
+const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', celebridades:'Celebridades', animes:'Animes', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
+const CAT_KEYS = Object.keys(CATS);
+
+/* ---------- Utilidades ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n || 0).toLocaleString('pt-BR');
+const slug = n => String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+const emailOf = n => slug(n) + '@quizdagalera.app';
+const allOn = () => Object.fromEntries(CAT_KEYS.map(k => [k, true]));
+const chosen = o => CAT_KEYS.filter(k => o[k]);
+
+if (!window.supabase) {
+  document.getElementById('app').innerHTML = '<p class="err">Não consegui carregar o Supabase. Confira sua internet e recarregue a página.</p>';
+  throw new Error('supabase-js não carregou');
+}
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function rpc(name, args) {
+  const { data, error } = await sb.rpc(name, args || {});
+  if (error) throw error;
+  return data;
+}
+function friendly(e) {
+  const m = (e && e.message) || String(e);
+  if (/Invalid login credentials/i.test(m)) return 'Apelido ou senha incorretos.';
+  if (/already registered|already been registered/i.test(m)) return 'Esse apelido já está em uso. Escolha outro ou entre com a senha.';
+  if (/Password should be at least/i.test(m)) return 'A senha precisa ter pelo menos 6 caracteres.';
+  if (/sala não encontrada/i.test(m)) return 'Sala não encontrada. Confira o código.';
+  if (/sala cheia/i.test(m)) return 'Essa sala já tem dois jogadores.';
+  if (/sala expirada/i.test(m)) return 'Essa sala expirou. Crie uma nova.';
+  if (/perguntas insuficientes/i.test(m)) return 'Não há perguntas suficientes nessas categorias. Marque mais uma.';
+  if (/rate limit|too many/i.test(m)) return 'Muitas tentativas seguidas. Espere um pouco e tente de novo.';
+  if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sem conexão com o servidor. Confira a internet.';
+  return m;
+}
+
+/* ---------- Estado ---------- */
+let S = { screen: 'boot', user: null, home: null, authMode: 'login', notice: '', free: { cats: allOn(), n: 10 }, duelCats: allOn() };
+let G = null;   // partida do dia / livre em andamento
+let D = null;   // duelo em andamento
+let raf = 0, pollTimer = 0, sugTimer = 0, sugSeq = 0;
+
+function stopAll() { cancelAnimationFrame(raf); clearInterval(pollTimer); pollTimer = 0; }
+
+/* ---------- Componentes ---------- */
+function questionBlock(q) {
+  return `
+  <section class="card stack">
+    <span class="tag">${esc(CATS[q.category] || q.category)}</span>
+    <p class="prompt">${esc(q.prompt)}</p>
+    ${q.clue ? `<p class="clue">${esc(q.clue)}</p>` : ''}
+    ${q.media_url ? `<img class="qimg" src="${esc(q.media_url)}" alt="Imagem da pergunta" referrerpolicy="no-referrer" decoding="async">` : ''}
+  </section>`;
+}
+function answerBox(q) {
+  const numeric = q.answer_type === 'year' || q.answer_type === 'number';
+  return `
+  <section class="stack" id="answerarea">
+    <input id="ans" class="inp" ${numeric ? 'inputmode="numeric"' : ''} placeholder="${numeric ? 'Digite o número' : 'Digite a resposta'}"
+      autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Sua resposta">
+    <ul id="sugg" class="sugg"></ul>
+    <button class="btn big" data-a="submit">Responder</button>
+  </section>`;
+}
+function chips(obj, action) {
+  return `<div class="seg">${CAT_KEYS.map(k => `<button class="chip" data-a="${action}" data-v="${k}" aria-pressed="${!!obj[k]}">${obj[k] ? '✓ ' : ''}${CATS[k]}</button>`).join('')}</div>`;
+}
+
+/* ---------- Telas ---------- */
+function vAuth() {
+  const login = S.authMode === 'login';
+  return `
+  <section>
+    <h1>Quiz da Galera</h1>
+    <p class="lead">Perguntas de jogos, filmes, séries, animes e mais. Quanto mais rápido você acerta, mais pontos ganha.</p>
+  </section>
+  <section class="card stack">
+    <div class="tabs">
+      <button class="chip" data-a="authmode" data-v="login" aria-pressed="${login}">Entrar</button>
+      <button class="chip" data-a="authmode" data-v="signup" aria-pressed="${!login}">Criar conta</button>
+    </div>
+    <label for="nick" class="lbl">Apelido</label>
+    <input id="nick" class="inp" maxlength="16" placeholder="Seu apelido" autocomplete="username" autocapitalize="off">
+    <label for="pw" class="lbl">Senha</label>
+    <input id="pw" class="inp" type="password" minlength="6" placeholder="Pelo menos 6 caracteres" autocomplete="${login ? 'current-password' : 'new-password'}">
+    ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+    <button class="btn big" data-a="auth">${login ? 'Entrar' : 'Criar conta e entrar'}</button>
+    ${login ? '' : '<p class="sub">Seu apelido aparece no placar para os amigos. Anote a senha: não há recuperação automática.</p>'}
+  </section>`;
+}
+
+function vHome() {
+  const h = S.home || {}, ds = h.daily || {}, lb = h.board || { rows: [], resets_in_days: 7 };
+  const left = lb.resets_in_days;
+  let dailyBlock;
+  if (ds.finished) dailyBlock = `<p><b>Hoje você fez ${fmt(ds.score)} pontos</b>, ${ds.correct} de ${ds.total} certas.</p><p class="sub">Volte amanhã para a próxima.</p>`;
+  else if (ds.started) dailyBlock = `<p>Você está na pergunta ${ds.index + 1} de ${ds.total} (${fmt(ds.score)} pts).</p><button class="btn big" data-a="daily">Continuar a partida</button><p class="sub">O relógio de cada pergunta continua correndo mesmo se você sair.</p>`;
+  else dailyBlock = `<button class="btn big" data-a="daily">Jogar a partida do dia</button><p class="sub">Uma vez por dia. Se sair no meio, o tempo continua correndo.</p>`;
+  const resume = sessionStorage.getItem('qz_duel');
+  return `
+  <header class="hdr">
+    <h1 class="mark">Quiz da Galera</h1>
+    <div class="row"><span>Jogando como <b>${esc(S.user.name)}</b></span><button class="link" data-a="logout">Sair da conta</button></div>
+  </header>
+  ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+  <section class="card hot stack">
+    <h2>Partida do dia</h2>
+    <p>10 perguntas, as mesmas para todo mundo, 20 segundos cada.</p>
+    ${dailyBlock}
+  </section>
+  <section class="card stack">
+    <h2>Modo livre</h2>
+    <p>Escolha os temas e jogue sozinho, quantas vezes quiser.</p>
+    <button class="btn" data-a="freesetup">Montar partida</button>
+  </section>
+  <section class="card stack">
+    <h2>Duelo online</h2>
+    <p>Um contra um, cada um no seu celular, com as mesmas perguntas ao mesmo tempo.</p>
+    <div class="actions">
+      <button class="btn" data-a="duelsetup">Criar ou entrar em uma sala</button>
+      ${resume ? `<button class="btn alt" data-a="duelresume">Voltar ao duelo (${esc(resume)})</button>` : ''}
+    </div>
+  </section>
+  <section class="card stack">
+    <h2>Placar da semana</h2>
+    <p class="sub">Só conta a partida do dia. Zera na segunda-feira, ${left === 1 ? 'amanhã' : `daqui a ${left} dias`}.</p>
+    ${lb.rows.length
+      ? `<ol class="board">${lb.rows.slice(0, 15).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}</span><span class="dy">${r.days} ${r.days === 1 ? 'dia' : 'dias'}</span><span class="pt">${fmt(r.points)}</span></li>`).join('')}</ol>`
+      : `<p class="empty">Ninguém pontuou nesta semana ainda. Jogue a partida do dia para abrir o placar.</p>`}
+  </section>`;
+}
+
+function vFreeSetup() {
+  const f = S.free, n = f.n;
+  return `
+  <header class="row"><button class="link" data-a="home">Voltar</button><h2>Modo livre</h2></header>
+  ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+  <section class="card stack">
+    <p class="lbl">Temas</p>
+    ${chips(f.cats, 'fcat')}
+    <p class="lbl">Número de perguntas</p>
+    <div class="seg">${[5, 10, 15].map(o => `<button class="chip" data-a="fnum" data-v="${o}" aria-pressed="${o === n}">${o}</button>`).join('')}</div>
+    <button class="btn big" data-a="startfree" ${chosen(f.cats).length ? '' : 'disabled'}>Começar</button>
+  </section>`;
+}
+
+function vDuelSetup() {
+  return `
+  <header class="row"><button class="link" data-a="home">Voltar</button><h2>Duelo online</h2></header>
+  ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+  <section class="card stack">
+    <h2>Criar sala</h2>
+    <p class="sub">Escolha os temas. Você recebe um código para mandar ao amigo.</p>
+    ${chips(S.duelCats, 'dcat')}
+    <button class="btn big" data-a="duelcreate" ${chosen(S.duelCats).length ? '' : 'disabled'}>Criar sala</button>
+  </section>
+  <section class="card stack">
+    <h2>Entrar em uma sala</h2>
+    <input id="joincode" class="inp" maxlength="5" placeholder="Código de 5 letras" autocomplete="off" autocapitalize="characters">
+    <button class="btn big" data-a="duelenter">Entrar</button>
+  </section>`;
+}
+
+function vAsk() {
+  const q = G.q;
+  return `
+  <header class="row top"><button class="link" data-a="home">Sair</button><span class="prog">Pergunta ${G.index + 1} de ${G.total}</span><span class="pts">${fmt(G.score)} pts</span></header>
+  <div class="ticker"><b id="worth">1.000</b><span>pontos valendo agora</span></div>
+  <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+  ${questionBlock(q)}
+  ${answerBox(q)}`;
+}
+
+function vFeedback() {
+  const L = G.last;
+  const last = L.finished;
+  return `
+  <header class="row top"><button class="link" data-a="home">Sair</button><span class="prog">Pergunta ${G.index + 1} de ${G.total}</span><span class="pts">${fmt(G.score)} pts</span></header>
+  <section class="verdict ${L.correct ? 'ok' : 'bad'}" role="status">
+    <h2>${L.correct ? `Acertou! +${fmt(L.points)}` : (L.timed_out ? 'Acabou o tempo' : 'Errou')}</h2>
+    <p>Resposta: <b>${esc(L.answer)}</b></p>
+  </section>
+  <button class="btn big" data-a="next" data-primary>${last ? 'Ver resultado' : 'Próxima pergunta'}</button>
+  <button class="link" data-a="report" data-id="${G.q.id}">Essa pergunta está errada ou injusta? Avisar</button>`;
+}
+
+function vResult() {
+  const r = G.result;
+  const pos = G.mode === 'daily' && S.home ? (S.home.board.rows.findIndex(x => x.me) + 1) : 0;
+  return `
+  <h1>Partida encerrada</h1>
+  <div class="card hot stack">
+    <b class="big-n">${fmt(r.score)}</b>
+    <p>pontos, ${r.correct} de ${r.total} certas</p>
+    ${pos ? `<p>Você está em ${pos}º lugar no placar da semana.</p>` : ''}
+  </div>
+  <div class="actions">
+    ${G.mode === 'daily' ? '<button class="btn" data-a="copy">Copiar resultado</button>' : '<button class="btn" data-a="freesetup">Jogar de novo</button>'}
+    <button class="btn alt" data-a="home">Voltar ao início</button>
+  </div>`;
+}
+
+/* ---------- Duelo (desenhado em partes para não apagar o que a pessoa digita) ---------- */
+function meOpp(st) {
+  const me = st.me, opp = me === 'host' ? 'guest' : 'host';
+  return { me, opp, meName: st[me] || 'Você', oppName: st[opp] || 'Amigo', meScore: st.scores ? st.scores[me] : 0, oppScore: st.scores ? st.scores[opp] : 0 };
+}
+function duelHead(st) {
+  const m = meOpp(st);
+  return `<header class="row top"><button class="link" data-a="duelleave">Sair</button><span class="prog">Pergunta ${st.index + 1} de ${st.total}</span><span></span></header>
+  <div class="scoreline" id="scoreline"><span>${esc(m.meName)}: ${fmt(m.meScore)}</span><span>${esc(m.oppName)}: ${fmt(m.oppScore)}</span></div>`;
+}
+function vDuel(st) {
+  const m = st.status !== 'waiting' && st.status !== 'countdown' ? meOpp(st) : null;
+  if (st.status === 'waiting') return `
+    <header class="row"><button class="link" data-a="duelleave">Voltar</button><h2>Sala criada</h2></header>
+    <section class="card hot stack center">
+      <p>Mande este código para o seu amigo:</p>
+      <p class="code" aria-label="Código da sala">${esc(st.code)}</p>
+      <button class="btn" data-a="sharecode">Compartilhar</button>
+      <p class="sub">Assim que ele entrar, o duelo começa sozinho.</p>
+    </section>`;
+  if (st.status === 'countdown') return `
+    <section class="card stack center">
+      <h2>${esc(st.host)} x ${esc(st.guest)}</h2>
+      <p>O duelo começa em <b id="tleft">${Math.ceil(st.seconds_left)}s</b></p>
+      <div class="bar" style="width:100%" aria-hidden="true"><i id="bar"></i></div>
+    </section>`;
+  if (st.status === 'question') return `
+    ${duelHead(st)}
+    <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+    <p class="turn"><span id="tleft">${Math.ceil(st.seconds_left)}s</span> <span id="oppdot" class="sub"></span></p>
+    ${questionBlock(st.question)}
+    ${st.answered ? sentBox() : answerBox(st.question)}`;
+  if (st.status === 'reveal') {
+    const mine = st[m.me + '_result'], theirs = st[m.opp + '_result'];
+    const line = (name, r) => r ? `${esc(name)}: ${r.correct ? 'acertou' : 'errou'} (+${fmt(r.points)})${r.guess ? `, respondeu “${esc(r.guess)}”` : ''}` : `${esc(name)}: não respondeu`;
+    return `
+    ${duelHead(st)}
+    <section class="verdict ${mine && mine.correct ? 'ok' : 'bad'}" role="status">
+      <h2>${mine && mine.correct ? `Acertou! +${fmt(mine.points)}` : (mine ? 'Errou' : 'Sem resposta')}</h2>
+      <p>Resposta: <b>${esc(st.answer)}</b></p>
+      <p class="sub">${line(m.meName, mine)}</p>
+      <p class="sub">${line(m.oppName, theirs)}</p>
+    </section>
+    <p class="turn">Próxima pergunta em <span id="tleft">${Math.ceil(st.seconds_left)}s</span></p>
+    <div class="bar" aria-hidden="true"><i id="bar"></i></div>`;
+  }
+  // finished
+  const w = m.meScore === m.oppScore ? null : (m.meScore > m.oppScore ? m.meName : m.oppName);
+  return `
+    <h1>${w ? esc(w) + ' venceu!' : 'Empate!'}</h1>
+    <div class="vs">
+      <div class="card ${m.meScore >= m.oppScore ? 'hot' : ''}"><p class="sub">${esc(m.meName)}</p><b class="big-n">${fmt(m.meScore)}</b></div>
+      <div class="card ${m.oppScore >= m.meScore ? 'hot' : ''}"><p class="sub">${esc(m.oppName)}</p><b class="big-n">${fmt(m.oppScore)}</b></div>
+    </div>
+    <div class="actions"><button class="btn" data-a="duelsetup">Novo duelo</button><button class="btn alt" data-a="home">Voltar ao início</button></div>`;
+}
+const sentBox = () => `<section class="card stack center" id="answerarea"><p><b>Resposta enviada!</b></p><p class="sub">Aguarde o tempo acabar para ver o resultado.</p></section>`;
+
+function drawDuel(st) {
+  const key = [st.status, st.index ?? '', st.status === 'waiting' ? '' : (st.guest || '')].join('|');
+  const deadline = performance.now() + (st.seconds_left || 0) * 1000;
+  D.deadline = deadline;
+  if (key !== D.key) {
+    D.key = key; D.sent = !!st.answered;
+    cancelAnimationFrame(raf);
+    $('app').innerHTML = vDuel(st);
+    const first = document.querySelector('[data-primary]');
+    if (st.status === 'question') { const i = $('ans'); if (i) i.focus(); startDuelTimer(20); }
+    else if (st.status === 'reveal') startDuelTimer(5);
+    else if (st.status === 'countdown') startDuelTimer(6);
+    if (first) first.focus();
+  } else {
+    if (st.scores && $('scoreline')) { const m = meOpp(st); $('scoreline').innerHTML = `<span>${esc(m.meName)}: ${fmt(m.meScore)}</span><span>${esc(m.oppName)}: ${fmt(m.oppScore)}</span>`; }
+    if (st.status === 'question') {
+      if ($('oppdot')) $('oppdot').textContent = st.opp_answered ? '· seu amigo já respondeu' : '';
+      if (st.answered && !D.sent) { D.sent = true; $('answerarea').outerHTML = sentBox(); }
+    }
+  }
+  if (st.status === 'finished' || st.status === 'waiting') cancelAnimationFrame(raf);
+  if (st.status === 'finished') { stopAll(); sessionStorage.removeItem('qz_duel'); }
+}
+function startDuelTimer(total) {
+  const tick = () => {
+    const left = Math.max(0, (D.deadline - performance.now()) / 1000);
+    const bar = $('bar'), t = $('tleft');
+    if (bar) { bar.style.width = (Math.min(1, left / total) * 100) + '%'; if (left < total * 0.3) bar.classList.add('low'); }
+    if (t) t.textContent = Math.ceil(left) + 's';
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+}
+async function pollDuel() {
+  if (!D) return;
+  try { drawDuel(D.st = await rpc('duel_state', { p_code: D.code })); }
+  catch (e) { if (/sala não encontrada/i.test(e.message || '')) { sessionStorage.removeItem('qz_duel'); goHome(friendly(e)); } }
+}
+async function openDuel(code) {
+  stopAll();
+  D = { code, key: '', deadline: 0, sent: false, st: null };
+  sessionStorage.setItem('qz_duel', code);
+  S.screen = 'duel';
+  $('app').innerHTML = '<p class="sub">Entrando na sala...</p>';
+  await pollDuel();
+  if (D && D.st && D.st.status !== 'finished') pollTimer = setInterval(pollDuel, 1000);
+}
+async function duelSubmit() {
+  const el = $('ans'); if (!el || !D || D.sent) return;
+  const v = el.value.trim(); if (!v) return;
+  D.sent = true;
+  const idx = D.st.index;
+  el.disabled = true;
+  try {
+    const r = await rpc('duel_answer', { p_code: D.code, p_idx: idx, p_guess: v });
+    $('answerarea').outerHTML = r.accepted ? sentBox() : `<section class="card stack center" id="answerarea"><p><b>Tempo esgotado.</b></p></section>`;
+  } catch (e) { D.sent = false; el.disabled = false; alert(friendly(e)); }
+}
+
+/* ---------- Fluxo ---------- */
+const VIEWS = { auth: vAuth, home: vHome, free: vFreeSetup, duelsetup: vDuelSetup, ask: vAsk, feedback: vFeedback, result: vResult };
+
+function render() {
+  cancelAnimationFrame(raf);
+  $('app').innerHTML = VIEWS[S.screen]();
+  window.scrollTo(0, 0);
+  if (S.screen === 'ask') {
+    const i = $('ans'); if (i) i.focus();
+    const total = 20, bar = $('bar'), worth = $('worth');
+    const tick = () => {
+      const left = Math.max(0, (G.endAt - performance.now()) / 1000);
+      bar.style.width = (left / total * 100) + '%';
+      if (left < total * 0.3) bar.classList.add('low');
+      worth.textContent = fmt(Math.round(400 + 600 * left / total));
+      if (left <= 0) { answerRun(null); return; }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  } else {
+    const el = document.querySelector('[data-primary]') || (S.screen === 'auth' ? $('nick') : null);
+    if (el) el.focus();
+  }
+}
+
+async function goHome(notice) {
+  stopAll(); G = null; D = null;
+  S.notice = notice || '';
+  S.screen = 'home'; S.home = S.home || { daily: {}, board: { rows: [], resets_in_days: 7 } };
+  render();
+  try {
+    const [daily, board] = await Promise.all([rpc('daily_status'), rpc('weekly_leaderboard')]);
+    S.home = { daily, board };
+  } catch (e) { S.notice = S.notice || friendly(e); }
+  if (S.screen === 'home') render();
+}
+
+async function nextQuestion() {
+  const r = await rpc('run_current', { p_run: G.runId });
+  if (r.finished) {
+    G.result = r;
+    if (G.mode === 'daily') { try { S.home = { daily: await rpc('daily_status'), board: await rpc('weekly_leaderboard') }; } catch (e) {} }
+    S.screen = 'result'; render(); return;
+  }
+  G.q = r.question; G.index = r.index; G.total = r.total; G.score = r.score;
+  G.endAt = performance.now() + r.seconds_left * 1000;
+  G.busy = false;
+  S.screen = 'ask'; render();
+}
+
+async function answerRun(guess) {
+  if (!G || G.busy) return;
+  G.busy = true; cancelAnimationFrame(raf);
+  try {
+    const a = await rpc('run_answer', { p_run: G.runId, p_guess: guess });
+    G.last = a; G.score = a.score;
+    S.screen = 'feedback'; render();
+  } catch (e) {
+    try { await nextQuestion(); } catch (e2) { goHome(friendly(e2)); }
+  } finally { if (G) G.busy = false; }
+}
+
+async function startRun(mode, runId) {
+  stopAll();
+  G = { mode, runId, busy: false };
+  try { await nextQuestion(); } catch (e) { goHome(friendly(e)); }
+}
+
+async function loadSession() {
+  const { data } = await sb.auth.getSession();
+  const u = data && data.session && data.session.user;
+  if (!u) { S.user = null; S.screen = 'auth'; render(); return; }
+  S.user = { id: u.id, name: (u.user_metadata && u.user_metadata.display_name) || (u.email || '').split('@')[0] };
+  goHome();
+}
+
+async function doAuth() {
+  const name = ($('nick').value || '').trim(), pw = $('pw').value || '';
+  if (slug(name).length < 3) { S.notice = 'O apelido precisa ter pelo menos 3 letras ou números.'; render(); return; }
+  if (pw.length < 6) { S.notice = 'A senha precisa ter pelo menos 6 caracteres.'; render(); return; }
+  const btn = document.querySelector('[data-a="auth"]'); if (btn) btn.disabled = true;
+  try {
+    if (S.authMode === 'signup') {
+      const { data, error } = await sb.auth.signUp({ email: emailOf(name), password: pw, options: { data: { display_name: name } } });
+      if (error) throw error;
+      if (!data.session) throw new Error('A confirmação por e-mail está ligada no Supabase. Desligue em Authentication > Providers > Email e tente de novo.');
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email: emailOf(name), password: pw });
+      if (error) throw error;
+    }
+    S.notice = '';
+    await loadSession();
+  } catch (e) { S.notice = friendly(e); render(); const n = $('nick'); if (n) n.value = name; }
+}
+
+/* ---------- Eventos ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-a]'); if (!t) return;
+  const v = t.dataset.v;
+  try {
+    switch (t.dataset.a) {
+      case 'authmode': S.authMode = v; S.notice = ''; render(); break;
+      case 'auth': await doAuth(); break;
+      case 'logout': stopAll(); await sb.auth.signOut(); sessionStorage.removeItem('qz_duel'); S = { ...S, user: null, home: null, screen: 'auth', notice: '' }; render(); break;
+      case 'home': goHome(); break;
+      case 'daily': startRun('daily', await rpc('start_daily')); break;
+      case 'freesetup': S.notice = ''; S.screen = 'free'; render(); break;
+      case 'fcat': S.free.cats[v] = !S.free.cats[v]; render(); break;
+      case 'fnum': S.free.n = +v; render(); break;
+      case 'startfree': startRun('free', await rpc('start_free', { p_categories: chosen(S.free.cats), p_total: S.free.n })); break;
+      case 'submit': { const el = $('ans'); if (el && S.screen === 'ask') { const val = el.value.trim(); if (val) answerRun(val); } else duelSubmit(); break; }
+      case 'pick': { const i = $('ans'); if (i) { i.value = v; $('sugg').innerHTML = ''; i.focus(); } break; }
+      case 'next': await nextQuestion(); break;
+      case 'report': { t.disabled = true; try { await rpc('report_question', { p_id: +t.dataset.id }); t.textContent = 'Obrigado! Vamos revisar essa pergunta.'; } catch (e2) { t.disabled = false; } break; }
+      case 'copy': {
+        const r = G.result, d = new Date();
+        const txt = `Quiz da Galera ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}: ${r.correct} de ${r.total} certas, ${fmt(r.score)} pontos`;
+        try { await navigator.clipboard.writeText(txt); t.textContent = 'Copiado!'; } catch (e2) { t.textContent = 'Não foi possível copiar'; }
+        break;
+      }
+      case 'duelsetup': stopAll(); D = null; S.notice = ''; S.screen = 'duelsetup'; render(); break;
+      case 'dcat': S.duelCats[v] = !S.duelCats[v]; render(); break;
+      case 'duelcreate': openDuel(await rpc('duel_create', { p_categories: chosen(S.duelCats) })); break;
+      case 'duelenter': {
+        const code = ($('joincode').value || '').trim().toUpperCase();
+        if (code.length < 4) { S.notice = 'Digite o código da sala.'; render(); break; }
+        await rpc('duel_join', { p_code: code }); openDuel(code); break;
+      }
+      case 'duelresume': openDuel(sessionStorage.getItem('qz_duel')); break;
+      case 'duelleave': goHome(); break;
+      case 'sharecode': {
+        const text = `Vem jogar duelo no Quiz da Galera! Código da sala: ${D.code}\n${location.href.split('#')[0]}`;
+        if (navigator.share) { try { await navigator.share({ text }); } catch (e2) {} }
+        else { try { await navigator.clipboard.writeText(text); t.textContent = 'Copiado!'; } catch (e2) {} }
+        break;
+      }
+    }
+  } catch (err) {
+    S.notice = friendly(err);
+    if (['duelenter', 'duelcreate'].includes(t.dataset.a)) { S.screen = 'duelsetup'; render(); }
+    else if (['startfree'].includes(t.dataset.a)) { S.screen = 'free'; render(); }
+    else if (S.screen === 'home') render();
+    else if (t.dataset.a === 'daily') goHome(S.notice);
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id !== 'ans') return;
+  const q = S.screen === 'ask' && G ? G.q : (S.screen === 'duel' && D && D.st && D.st.status === 'question' ? D.st.question : null);
+  const v = e.target.value.trim();
+  clearTimeout(sugTimer);
+  if (!q || !q.pool || v.length < 2) { const ul = $('sugg'); if (ul) ul.innerHTML = ''; return; }
+  const mine = ++sugSeq;
+  sugTimer = setTimeout(async () => {
+    try {
+      const rows = await rpc('search_pool', { p_pool: q.pool, p_q: v, p_limit: 6 });
+      if (mine !== sugSeq) return;
+      const ul = $('sugg');
+      if (ul) ul.innerHTML = rows.map(r => `<li><button type="button" data-a="pick" data-v="${esc(r.name)}">${esc(r.name)}</button></li>`).join('');
+    } catch (err) { /* sem sugestões, tudo bem */ }
+  }, 160);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const id = e.target.id;
+  if (id === 'ans') { e.preventDefault(); if (S.screen === 'ask') { const val = e.target.value.trim(); if (val) answerRun(val); } else duelSubmit(); }
+  else if (id === 'nick') { e.preventDefault(); $('pw').focus(); }
+  else if (id === 'pw') { e.preventDefault(); doAuth(); }
+  else if (id === 'joincode') { e.preventDefault(); document.querySelector('[data-a="duelenter"]').click(); }
+});
+
+loadSession();
+</script>
+</body>
+</html>
