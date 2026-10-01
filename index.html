@@ -25,7 +25,7 @@
 }
 :root[data-palette="noite"]{
   --bg:#0E0B1F; --paper:#1A1633; --ink:#F3F0FF; --muted:#B4AEDB; --line:#F3F0FF; --shade:#05030F;
-  --accent:#FF4FA3; --on-accent:#1A0510; --btn:#5CF2C0; --on-btn:#062B23; --soft:#3A1F45; --on-soft:#F3F0FF;
+  --accent:#6C4DF6; --on-accent:#FFFFFF; --btn:#5CF2C0; --on-btn:#062B23; --soft:#2B2560; --on-soft:#F3F0FF;
   --ok:#4DE0B0; --ok-bg:#0E3B31; --bad:#FF8A80; --bad-bg:#4A1B2A;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -65,6 +65,7 @@ p{margin:0}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.big{min-height:56px;font-size:1.1rem;width:100%}
 .btn.alt{background:var(--paper);color:var(--ink)}
+.hearts{color:var(--bad);letter-spacing:.08em;margin-left:6px}
 .btnrow{display:grid;grid-template-columns:2fr 1fr;gap:10px}
 .flash{background:var(--soft);color:var(--on-soft);border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:600}
 .palettes{display:flex;justify-content:center;gap:10px;margin:0 0 12px}
@@ -122,10 +123,11 @@ p{margin:0}
   <div class="palettes" role="group" aria-label="Cores do site">
     <button data-a="palette" data-v="roxo" aria-label="Cores: roxo" aria-pressed="true" style="--sw:#5B3DF5"></button>
     <button data-a="palette" data-v="oceano" aria-label="Cores: oceano" aria-pressed="false" style="--sw:#0E7C8B"></button>
-    <button data-a="palette" data-v="noite" aria-label="Cores: noite" aria-pressed="false" style="--sw:#FF4FA3"></button>
+    <button data-a="palette" data-v="noite" aria-label="Cores: noite" aria-pressed="false" style="--sw:#0E0B1F"></button>
   </div>
   Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Wikidata, Wikimedia Commons e TheMealDB.
   Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
+  <br>Versão 1.2
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -135,7 +137,7 @@ p{margin:0}
 /* ---------- Configuração (chaves públicas: podem ficar no site) ---------- */
 const SUPABASE_URL = 'https://gjcttqcyoccxbjwdzukr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7FSEwMq4vkF_Lf12LVHMNg_C2NTq3xk';
-const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', animes:'Animes', celebridades:'Atores e atrizes', artistas:'Artistas e esportistas', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
+const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', animes:'Animes', celebridades:'Atores e atrizes', artistas:'Artistas e esportistas', historia:'História', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
 const CAT_KEYS = Object.keys(CATS);
 
 /* ---------- Utilidades ---------- */
@@ -173,7 +175,7 @@ function friendly(e) {
 }
 
 /* ---------- Estado ---------- */
-let S = { screen: 'boot', user: null, home: null, authMode: 'login', notice: '', free: { cats: allOn(), n: 10 }, duelCats: allOn(), joinCats: allOn() };
+let S = { screen: 'boot', user: null, home: null, authMode: 'login', notice: '', free: { cats: allOn(), n: 10 }, duelCats: allOn(), joinCats: allOn(), endCats: allOn() };
 let G = null;   // partida do dia / livre em andamento
 let D = null;   // duelo em andamento
 let raf = 0, pollTimer = 0, sugTimer = 0, sugSeq = 0;
@@ -267,13 +269,20 @@ function vHome() {
       ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
       <section class="card hot stack">
         <h2>Partida do dia</h2>
-        <p>10 perguntas, as mesmas para todo mundo. Cada uma tem 20 segundos (mais tempo nas de leitura).</p>
+        <p>10 perguntas, as mesmas para todo mundo. Cada uma tem 20 segundos (mais tempo nas de leitura). Sem culinária e química.</p>
         ${dailyBlock}
       </section>
       <section class="card stack">
         <h2>Modo livre</h2>
         <p>Escolha os temas e jogue sozinho, quantas vezes quiser.</p>
         <button class="btn" data-a="freesetup">Montar partida</button>
+      </section>
+      <section class="card stack">
+        <h2>Modo ilimitado</h2>
+        <p>Sem limite de perguntas e com 5 vidas: cada erro tira uma. Vá até onde conseguir.</p>
+        <p class="sub">Seu recorde: <b>${fmt((h.endless || {}).best)}</b> pontos</p>
+        ${((h.endless || {}).rows || []).length ? `<ol class="board">${h.endless.rows.slice(0, 5).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}</span><span class="dy"></span><span class="pt">${fmt(r.score)}</span></li>`).join('')}</ol><p class="sub">Melhores da semana.</p>` : ''}
+        <button class="btn" data-a="endlesssetup">Jogar</button>
       </section>
       <section class="card stack">
         <h2>Duelo online</h2>
@@ -301,6 +310,18 @@ function vFreeSetup() {
   </section>`;
 }
 
+function vEndlessSetup() {
+  return `
+  <header class="row"><button class="link" data-a="home">Voltar</button><h2>Modo ilimitado</h2></header>
+  ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+  <section class="card stack">
+    <p>Você começa com 5 vidas. Errar, pular ou deixar o tempo acabar tira uma vida, e o jogo termina quando elas acabam. Não há limite de perguntas.</p>
+    <p class="lbl">Temas</p>
+    ${chips(S.endCats, 'ecat')}
+    <button class="btn big" data-a="startendless" ${chosen(S.endCats).length ? '' : 'disabled'}>Começar</button>
+  </section>`;
+}
+
 function vDuelSetup() {
   return `
   <header class="row"><button class="link" data-a="home">Voltar</button><h2>Duelo online</h2></header>
@@ -320,10 +341,18 @@ function vDuelSetup() {
   </section>`;
 }
 
+const hearts = n => '♥'.repeat(Math.max(0, n)) + '♡'.repeat(Math.max(0, 5 - n));
+function runHead() {
+  const mid = G.mode === 'endless'
+    ? `Pergunta ${G.index + 1}<span class="hearts" role="img" aria-label="${G.lives} de 5 vidas">${hearts(G.lives)}</span>`
+    : `Pergunta ${G.index + 1} de ${G.total}`;
+  return `<header class="row top"><button class="link" data-a="home">Sair</button><span class="prog">${mid}</span><span class="pts">${fmt(G.score)} pts</span></header>`;
+}
+
 function vAsk() {
   const q = G.q;
   return `
-  <header class="row top"><button class="link" data-a="home">Sair</button><span class="prog">Pergunta ${G.index + 1} de ${G.total}</span><span class="pts">${fmt(G.score)} pts</span></header>
+  ${runHead()}
   ${G.flash ? `<p class="flash" role="status">${esc(G.flash)}</p>` : ''}
   <div class="ticker"><b id="worth">1.000</b><span>pontos valendo agora</span></div>
   <div class="bar" aria-hidden="true"><i id="bar"></i></div>
@@ -335,10 +364,11 @@ function vFeedback() {
   const L = G.last;
   const last = L.finished;
   return `
-  <header class="row top"><button class="link" data-a="home">Sair</button><span class="prog">Pergunta ${G.index + 1} de ${G.total}</span><span class="pts">${fmt(G.score)} pts</span></header>
+  ${runHead()}
   <section class="verdict ${L.correct ? 'ok' : 'bad'}" role="status">
     <h2>${L.correct ? `Acertou! +${fmt(L.points)}` : (L.timed_out ? 'Acabou o tempo' : 'Errou')}</h2>
     <p>Resposta: <b>${esc(L.answer)}</b></p>
+    ${G.mode === 'endless' && !L.correct ? `<p>${L.lives > 0 ? `Vidas restantes: ${L.lives}` : 'Acabaram as suas vidas.'}</p>` : ''}
   </section>
   <button class="btn big" data-a="next" data-primary>${last ? 'Ver resultado' : 'Próxima pergunta'}</button>
   <button class="link" data-a="report" data-id="${G.q.id}">Essa pergunta está errada ou injusta? Avisar</button>`;
@@ -346,6 +376,18 @@ function vFeedback() {
 
 function vResult() {
   const r = G.result;
+  if (G.mode === 'endless') {
+    const rec = r.score > (G.prevBest || 0);
+    return `
+    <h1>Fim de jogo</h1>
+    ${G.flash ? `<p class="flash" role="status">${esc(G.flash)}</p>` : ''}
+    <div class="card hot stack">
+      <b class="big-n">${fmt(r.score)}</b>
+      <p>pontos, ${r.correct} certas em ${r.total} perguntas</p>
+      <p>${rec ? '<b>Novo recorde pessoal!</b>' : `Seu recorde: ${fmt(G.prevBest)}`}</p>
+    </div>
+    <div class="actions"><button class="btn" data-a="endlesssetup">Jogar de novo</button><button class="btn alt" data-a="home">Voltar ao início</button></div>`;
+  }
   const pos = G.mode === 'daily' && S.home ? (S.home.board.rows.findIndex(x => x.me) + 1) : 0;
   return `
   <h1>Partida encerrada</h1>
@@ -484,7 +526,7 @@ async function duelSubmit() {
 }
 
 /* ---------- Fluxo ---------- */
-const VIEWS = { auth: vAuth, home: vHome, free: vFreeSetup, duelsetup: vDuelSetup, ask: vAsk, feedback: vFeedback, result: vResult };
+const VIEWS = { auth: vAuth, home: vHome, endlesssetup: vEndlessSetup, free: vFreeSetup, duelsetup: vDuelSetup, ask: vAsk, feedback: vFeedback, result: vResult };
 
 function render() {
   cancelAnimationFrame(raf);
@@ -516,8 +558,8 @@ async function goHome(notice) {
   S.screen = 'home'; S.home = S.home || { daily: {}, board: { rows: [], resets_in_days: 7 } };
   render();
   try {
-    const [daily, board] = await Promise.all([rpc('daily_status'), rpc('weekly_leaderboard')]);
-    S.home = { daily, board };
+    const [daily, board, endless] = await Promise.all([rpc('daily_status'), rpc('weekly_leaderboard'), rpc('endless_stats')]);
+    S.home = { daily, board, endless };
   } catch (e) { S.notice = S.notice || friendly(e); }
   if (S.screen === 'home') render();
 }
@@ -526,10 +568,10 @@ async function nextQuestion() {
   const r = await rpc('run_current', { p_run: G.runId });
   if (r.finished) {
     G.result = r;
-    if (G.mode === 'daily') { try { S.home = { daily: await rpc('daily_status'), board: await rpc('weekly_leaderboard') }; } catch (e) {} }
+    if (G.mode === 'daily') { try { S.home = { ...S.home, daily: await rpc('daily_status'), board: await rpc('weekly_leaderboard') }; } catch (e) {} }
     S.screen = 'result'; render(); return;
   }
-  G.q = r.question; G.index = r.index; G.total = r.total; G.score = r.score;
+  G.q = r.question; G.index = r.index; G.total = r.total; G.score = r.score; G.lives = r.lives;
   G.limit = r.limit || 20;
   G.endAt = performance.now() + r.seconds_left * 1000;
   G.busy = false;
@@ -541,9 +583,9 @@ async function answerRun(guess, skip) {
   G.busy = true; cancelAnimationFrame(raf);
   try {
     const a = await rpc('run_answer', { p_run: G.runId, p_guess: guess });
-    G.last = a; G.score = a.score;
-    if (skip && !a.correct) {           // pular vai direto para a próxima, avisando qual era a resposta
-      G.flash = `Você pulou. A resposta era: ${a.answer}`;
+    G.last = a; G.score = a.score; G.lives = a.lives;
+    if (skip && !a.correct && !(G.mode === 'endless' && a.finished)) {   // pular vai direto para a próxima, avisando qual era a resposta
+      G.flash = `Você pulou${G.mode === 'endless' ? ' e perdeu uma vida' : ''}. A resposta era: ${a.answer}`;
       await nextQuestion();
     } else { S.screen = 'feedback'; render(); }
   } catch (e) {
@@ -553,7 +595,7 @@ async function answerRun(guess, skip) {
 
 async function startRun(mode, runId) {
   stopAll();
-  G = { mode, runId, busy: false };
+  G = { mode, runId, busy: false, prevBest: (S.home && S.home.endless && S.home.endless.best) || 0 };
   try { await nextQuestion(); } catch (e) { goHome(friendly(e)); }
 }
 
@@ -603,6 +645,9 @@ document.addEventListener('click', async e => {
       case 'skip': if (S.screen === 'ask') answerRun('', true); else { const el = $('ans'); if (el) el.value = ''; duelSubmit(); } break;
       case 'palette': applyPalette(v); break;
       case 'jcat': S.joinCats[v] = !S.joinCats[v]; render(); break;
+      case 'endlesssetup': S.notice = ''; S.screen = 'endlesssetup'; render(); break;
+      case 'ecat': S.endCats[v] = !S.endCats[v]; render(); break;
+      case 'startendless': startRun('endless', await rpc('start_endless', { p_categories: chosen(S.endCats) })); break;
       case 'pick': { const i = $('ans'); if (i) { i.value = v; $('sugg').innerHTML = ''; i.focus(); } break; }
       case 'next': await nextQuestion(); break;
       case 'report': { t.disabled = true; try { await rpc('report_question', { p_id: +t.dataset.id }); t.textContent = 'Obrigado! Vamos revisar essa pergunta.'; } catch (e2) { t.disabled = false; } break; }
@@ -633,6 +678,7 @@ document.addEventListener('click', async e => {
     S.notice = friendly(err);
     if (['duelenter', 'duelcreate'].includes(t.dataset.a)) { S.screen = 'duelsetup'; render(); }
     else if (['startfree'].includes(t.dataset.a)) { S.screen = 'free'; render(); }
+    else if (t.dataset.a === 'startendless') { S.screen = 'endlesssetup'; render(); }
     else if (S.screen === 'home') render();
     else if (t.dataset.a === 'daily') goHome(S.notice);
   }
