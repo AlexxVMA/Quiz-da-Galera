@@ -79,10 +79,12 @@ p{margin:0}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .seg{display:flex;gap:8px;flex-wrap:wrap}
 .board{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.board li{display:grid;grid-template-columns:2rem 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:2px solid var(--line);border-radius:12px}
+.board li{display:grid;grid-template-columns:2rem 34px 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:2px solid var(--line);border-radius:12px}
 .board li.me{background:var(--soft);color:var(--on-soft)}
 .board .rk{font:800 1.2rem "Bricolage Grotesque",Figtree,sans-serif}
 .board .nm{font-weight:700;overflow-wrap:anywhere}
+.board .nmbtn{background:none;border:0;padding:0;margin:0;min-height:34px;font:inherit;font-weight:700;color:inherit;text-align:left;cursor:pointer}
+.board .nmbtn:hover,.board .nmbtn:focus-visible{text-decoration:underline}
 .board .dy{font-size:.85rem;opacity:.8}
 .board .pt{font-weight:800;font-variant-numeric:tabular-nums}
 .top{gap:8px}
@@ -122,6 +124,28 @@ p{margin:0}
 .scoreline{display:flex;justify-content:space-between;gap:12px;font-weight:700}
 .credits{max-width:520px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:.78rem;text-align:center}
 .credits a{color:inherit}
+/* Perfil */
+.av{--s:40px;--c:var(--accent);--fc:#fff;width:var(--s);height:var(--s);flex:none;border-radius:50%;border:2px solid var(--line);background:var(--c);color:var(--fc);display:grid;place-items:center;font:800 calc(var(--s) * .46)/1 "Bricolage Grotesque",Figtree,sans-serif;overflow:hidden;object-fit:cover}
+img.av{display:block}
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.links{display:flex;gap:4px;flex-wrap:nowrap;justify-content:flex-end}
+.hrow{flex-wrap:wrap}
+.pbanner{aspect-ratio:3/1;border:3px solid var(--line);border-radius:14px;background:var(--c,var(--accent));overflow:hidden}
+.pbanner img{display:block;width:100%;height:100%;object-fit:cover}
+.phead{margin-top:-52px;padding-left:12px;position:relative}
+.phead .av{--s:92px;border-width:3px;box-shadow:0 0 0 4px var(--paper)}
+.pname{overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{border:2px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:2px;align-content:start}
+.stat b{font:800 1.5rem/1.1 "Bricolage Grotesque",Figtree,sans-serif;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:.85rem}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.emojis{display:flex;flex-wrap:wrap;gap:8px}
+.emojis .chip{min-width:44px;padding:0 10px;font-size:1.3rem}
+.swatches{display:flex;flex-wrap:wrap;gap:12px;padding:4px}
+.swatches button{width:40px;height:40px;border-radius:50%;border:3px solid var(--line);background:var(--sw);cursor:pointer;padding:0}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ink)}
+.prow{display:flex;align-items:center;gap:14px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -136,7 +160,7 @@ p{margin:0}
   Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Deezer, Wikidata, Wikimedia Commons e TheMealDB.
   Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
   Aberturas e endings: AnimeThemes (<a href="https://animethemes.moe" target="_blank" rel="noopener">animethemes.moe</a>).
-  <br>Versão 1.7.2
+  <br>Versão 1.8
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -151,6 +175,12 @@ const CAT_KEYS = Object.keys(CATS);
 const DUEL_KEYS = CAT_KEYS.filter(k => k !== 'aberturas');   // aberturas não têm cronômetro: ficam fora do duelo
 const isTheme = q => q && (q.kind === 'abertura' || q.kind === 'ending');
 const STAGE_PTS = [1000, 600, 300];
+const BUCKET = 'profile-media';
+const PCOL = { roxo: { bg: '#5B3DF5', fg: '#FFFFFF', nome: 'Roxo' }, oceano: { bg: '#0E7C8B', fg: '#FFFFFF', nome: 'Oceano' }, verde: { bg: '#19C39B', fg: '#062B23', nome: 'Verde' },
+  azul: { bg: '#2F6FED', fg: '#FFFFFF', nome: 'Azul' }, coral: { bg: '#FF6F59', fg: '#2A0B05', nome: 'Coral' }, grafite: { bg: '#3A3A52', fg: '#FFFFFF', nome: 'Grafite' } };
+const EMOJIS = ['😎', '🤓', '🥳', '🤖', '👾', '🎮', '🎬', '🎧', '⚽', '🍕', '🐱', '🐶', '🦊', '🐼', '🐲', '🚀'];
+const IMG_SIZE = { avatar: [400, 400], banner: [1200, 400] };           // tamanho final (a imagem é recortada no centro)
+const GIF_MAX = { avatar: 2 * 1024 * 1024, banner: 3 * 1024 * 1024 };   // GIF não é reduzido, então tem limite
 const THEME_NOTE = 'Aberturas e Endings tocam som (ligue o volume) e não têm cronômetro: só o som vale 1.000, com o vídeo borrado 600, com a dica e a capa borrada 300. Começa desligado.';
 
 /* ---------- Utilidades ---------- */
@@ -183,9 +213,24 @@ function friendly(e) {
   if (/sala expirada/i.test(m)) return 'Essa sala expirou. Crie uma nova.';
   if (/perguntas insuficientes/i.test(m)) return 'Não há perguntas suficientes nessas categorias. Marque mais uma.';
   if (/rate limit|too many/i.test(m)) return 'Muitas tentativas seguidas. Espere um pouco e tente de novo.';
+  if (/exceeded the maximum|too large|Payload/i.test(m)) return 'Essa imagem é grande demais. Escolha uma menor.';
+  if (/mime type|not supported/i.test(m)) return 'Formato não aceito. Use JPG, PNG, WebP ou GIF.';
+  if (/Bucket not found/i.test(m)) return 'O espaço de imagens ainda não foi criado. Rode o game.sql novo no Supabase.';
+  if (/Could not find the function|schema cache/i.test(m)) return 'Falta rodar o game.sql novo no Supabase.';
+  if (/row-level security|violates/i.test(m)) return 'Sem permissão para enviar essa imagem. Saia da conta, entre de novo e tente outra vez.';
+  if (/imagem inválida/i.test(m)) return 'Imagem inválida. Tente enviar de novo.';
   if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sem conexão com o servidor. Confira a internet.';
   return m;
 }
+
+function avatarHTML(p, size) {
+  p = p || {};
+  const c = PCOL[p.color] || PCOL.roxo, st = `--s:${size}px;--c:${c.bg};--fc:${c.fg}`;
+  if (p.avatar_url) return `<img class="av" style="${st}" src="${esc(p.avatar_url)}" alt="" referrerpolicy="no-referrer" decoding="async">`;
+  const letter = String(p.name || '?').trim().charAt(0).toUpperCase() || '?';
+  return `<span class="av" style="${st}" aria-hidden="true">${esc(p.emoji || letter)}</span>`;
+}
+const nameOf = r => r.uid ? `<button class="nm nmbtn" data-a="profile" data-v="${esc(r.uid)}">${esc(r.name)}</button>` : `<span class="nm">${esc(r.name)}</span>`;
 
 /* ---------- Estado ---------- */
 let S = { screen: 'boot', user: null, home: null, authMode: 'login', notice: '', free: { cats: allOn(), n: 10 }, duelCats: allOn(), joinCats: allOn(), endCats: allOn() };
@@ -271,14 +316,14 @@ function vHome() {
         <h2>Placar da semana</h2>
         <p class="sub">Só conta a partida do dia. Zera na segunda-feira, ${left === 1 ? 'amanhã' : `daqui a ${left} dias`}.</p>
         ${lb.rows.length
-          ? `<ol class="board">${lb.rows.slice(0, 15).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}</span><span class="dy">${r.days} ${r.days === 1 ? 'dia' : 'dias'}</span><span class="pt">${fmt(r.points)}</span></li>`).join('')}</ol>`
+          ? `<ol class="board">${lb.rows.slice(0, 15).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span>${avatarHTML(r, 34)}${nameOf(r)}<span class="dy">${r.days} ${r.days === 1 ? 'dia' : 'dias'}</span><span class="pt">${fmt(r.points)}</span></li>`).join('')}</ol>`
           : `<p class="empty">Ninguém pontuou nesta semana ainda. Jogue a partida do dia para abrir o placar.</p>`}
       </section>
     </aside>
     <div class="main">
       <header class="hdr">
         <h1 class="mark">Quiz da Galera</h1>
-        <div class="row"><span>Jogando como <b>${esc(S.user.name)}</b></span><button class="link" data-a="logout">Sair da conta</button></div>
+        <div class="row hrow"><span class="who">${avatarHTML({ ...(h.me || {}), name: S.user.name }, 36)}<span>Jogando como <b>${esc(S.user.name)}</b></span></span><span class="links"><button class="link" data-a="profile">Meu perfil</button><button class="link" data-a="logout">Sair da conta</button></span></div>
       </header>
       ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
       <section class="card hot stack">
@@ -295,7 +340,7 @@ function vHome() {
         <h2>Modo ilimitado</h2>
         <p>Sem limite de perguntas e com 5 vidas: cada erro tira uma. Vá até onde conseguir.</p>
         <p class="sub">Seu recorde: <b>${fmt((h.endless || {}).best)}</b> pontos</p>
-        ${((h.endless || {}).rows || []).length ? `<ol class="board">${h.endless.rows.slice(0, 5).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}</span><span class="dy"></span><span class="pt">${fmt(r.score)}</span></li>`).join('')}</ol><p class="sub">Melhores da semana.</p>` : ''}
+        ${((h.endless || {}).rows || []).length ? `<ol class="board">${h.endless.rows.slice(0, 5).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span>${avatarHTML(r, 34)}${nameOf(r)}<span class="dy"></span><span class="pt">${fmt(r.score)}</span></li>`).join('')}</ol><p class="sub">Melhores da semana.</p>` : ''}
         <button class="btn" data-a="endlesssetup">Jogar</button>
       </section>
       <section class="card stack">
@@ -471,6 +516,169 @@ function vResult() {
   </div>`;
 }
 
+
+/* ---------- Perfil ---------- */
+function vProfile() {
+  const p = S.pv || {}, st = p.stats || {}, c = PCOL[p.color] || PCOL.roxo, dash = '—';
+  const n = v => (v == null ? dash : fmt(v));
+  const stat = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
+  const duels = (st.duel_w || st.duel_l || st.duel_d) ? `${st.duel_w}V ${st.duel_l}D${st.duel_d ? ` ${st.duel_d}E` : ''}` : dash;
+  const since = p.since ? new Date(p.since).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : '';
+  return `
+  <section class="card stack">
+    <div class="pbanner" style="--c:${c.bg}">${p.banner_url ? `<img src="${esc(p.banner_url)}" alt="Capa do perfil" referrerpolicy="no-referrer" decoding="async">` : ''}</div>
+    <div class="phead">${avatarHTML(p, 92)}</div>
+    <div class="stack">
+      <h1 class="mark pname">${esc(p.name)}</h1>
+      ${p.title ? `<p class="clue">${esc(p.title)}</p>` : ''}
+      ${p.fav ? `<span class="tag">Tema favorito: ${esc(CATS[p.fav] || p.fav)}</span>` : ''}
+      ${since ? `<p class="sub">Na galera desde ${esc(since)}</p>` : ''}
+      ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+      ${p.me ? '<button class="btn" data-a="profileedit">Editar perfil</button>' : ''}
+    </div>
+  </section>
+  <section class="card stack">
+    <h2>Estatísticas</h2>
+    <div class="stats">
+      ${stat(n(st.daily_played), 'partidas do dia')}
+      ${stat(st.daily_avg == null ? dash : String(st.daily_avg).replace('.', ','), 'acertos por partida do dia')}
+      ${stat(n(st.daily_best), 'melhor pontuação do dia')}
+      ${stat(n(st.streak), 'dias seguidos jogando')}
+      ${stat(st.endless_best ? fmt(st.endless_best) : dash, 'recorde no ilimitado')}
+      ${stat(duels, 'duelos (V vitórias, D derrotas)')}
+      ${stat(st.week_rank ? st.week_rank + 'º' : dash, 'posição no placar da semana')}
+      ${stat(n(st.played_total), 'partidas no total')}
+    </div>
+  </section>
+  <div class="actions">
+    <button class="btn alt" data-a="home">Voltar ao início</button>
+    ${!p.me && (p.avatar_url || p.banner_url) ? `<button class="link" data-a="reportprofile" data-v="${esc(p.uid)}">Avisar sobre as imagens deste perfil</button>` : ''}
+  </div>`;
+}
+
+function pfUrl(kind) { const x = S.pf[kind]; return x.file ? x.preview : (x.remove ? null : S.pv[kind + '_url']); }
+
+function vProfileEdit() {
+  const pf = S.pf, c = PCOL[pf.color] || PCOL.roxo, av = pfUrl('avatar'), bn = pfUrl('banner');
+  const pick = (kind, has, label) => `<div class="pair"><button class="btn" data-a="pickfile" data-v="${kind}">${label}</button>${has ? `<button class="btn alt" data-a="dropfile" data-v="${kind}">Remover</button>` : ''}</div>
+    <input type="file" id="file${kind}" accept="image/*" hidden>`;
+  return `
+  <h1 class="mark">Editar perfil</h1>
+  ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
+  <section class="card stack">
+    <h2>Capa</h2>
+    <div class="pbanner" style="--c:${c.bg}">${bn ? `<img src="${esc(bn)}" alt="Prévia da capa" referrerpolicy="no-referrer">` : ''}</div>
+    ${pick('banner', !!bn, bn ? 'Trocar a capa' : 'Escolher a capa')}
+    <p class="sub">A imagem é recortada no meio e reduzida sozinha. GIF fica animado (até 3 MB).</p>
+  </section>
+  <section class="card stack">
+    <h2>Foto</h2>
+    <div class="prow">${avatarHTML({ avatar_url: av, emoji: pf.emoji, color: pf.color, name: S.pv.name }, 96)}<p class="sub">Sem foto, aparece o emoji (ou a inicial do seu nome) na cor escolhida.</p></div>
+    ${pick('avatar', !!av, av ? 'Trocar a foto' : 'Escolher a foto')}
+    <p class="sub">A foto é recortada em quadrado. GIF fica animado (até 2 MB).</p>
+    <p class="lbl">Emoji</p>
+    <div class="emojis">
+      <button class="chip" data-a="pemoji" data-v="" aria-pressed="${!pf.emoji}">Sem emoji</button>
+      ${EMOJIS.map(e => `<button class="chip" data-a="pemoji" data-v="${e}" aria-pressed="${pf.emoji === e}" aria-label="Emoji ${e}">${e}</button>`).join('')}
+    </div>
+    <p class="lbl">Cor do perfil</p>
+    <div class="swatches" role="group" aria-label="Cor do perfil">
+      ${Object.keys(PCOL).map(k => `<button data-a="pcolor" data-v="${k}" aria-pressed="${pf.color === k}" aria-label="Cor ${PCOL[k].nome}" style="--sw:${PCOL[k].bg}"></button>`).join('')}
+    </div>
+  </section>
+  <section class="card stack">
+    <h2>Sobre você</h2>
+    <label for="pf-title" class="lbl">Frase curta</label>
+    <input id="pf-title" class="inp" maxlength="40" placeholder="Ex.: Mestre dos animes" value="${esc(pf.title)}" autocomplete="off">
+    <p class="lbl">Tema favorito</p>
+    <div class="seg">${CAT_KEYS.map(k => `<button class="chip" data-a="pfav" data-v="${k}" aria-pressed="${pf.fav === k}">${pf.fav === k ? '✓ ' : ''}${CATS[k]}</button>`).join('')}</div>
+  </section>
+  <div class="actions">
+    <button class="btn big" data-a="saveprofile" ${pf.saving ? 'disabled' : ''}>${pf.saving ? 'Salvando...' : 'Salvar perfil'}</button>
+    <button class="btn alt" data-a="canceledit" ${pf.saving ? 'disabled' : ''}>Cancelar</button>
+  </div>`;
+}
+
+/* Imagens: reduz e recorta no navegador (GIF vai como está, para continuar animado) */
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Não consegui abrir essa imagem. Tente outro arquivo (JPG, PNG, WebP ou GIF).')); };
+    img.src = url;
+  });
+}
+const toBlob = (cv, type, q) => new Promise(res => cv.toBlob(res, type, q));
+async function prepImage(file, kind) {
+  if (!/^image\//.test(file.type)) throw new Error('Esse arquivo não é uma imagem.');
+  if (file.type === 'image/gif') {
+    if (file.size > GIF_MAX[kind]) throw new Error(`Esse GIF tem ${(file.size / 1048576).toFixed(1).replace('.', ',')} MB. O limite para ${kind === 'avatar' ? 'a foto' : 'a capa'} é ${GIF_MAX[kind] / 1048576} MB.`);
+    return { blob: file, ext: 'gif' };
+  }
+  const img = await loadImage(file), [W, H] = IMG_SIZE[kind];
+  const k = Math.max(W / img.naturalWidth, H / img.naturalHeight), dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+  const draw = white => {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const x = cv.getContext('2d'); if (white) { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); }
+    x.imageSmoothingQuality = 'high'; x.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh); return cv;
+  };
+  let blob = await toBlob(draw(false), 'image/webp', 0.85);
+  if (blob && blob.type === 'image/webp') return { blob, ext: 'webp' };
+  blob = await toBlob(draw(true), 'image/jpeg', 0.87);
+  if (!blob) throw new Error('Não consegui preparar essa imagem. Tente outro arquivo.');
+  return { blob, ext: 'jpg' };
+}
+async function uploadMedia(kind, prep) {
+  const path = `${S.user.id}/${kind}-${Date.now()}.${prep.ext}`;
+  const { error } = await sb.storage.from(BUCKET).upload(path, prep.blob, { contentType: prep.blob.type || 'image/' + prep.ext, cacheControl: '31536000', upsert: false });
+  if (error) throw error;
+  return { path, url: sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl };
+}
+// Apaga do Storage tudo que é "foto" (ou "capa") do jogador, menos o arquivo que continua em uso
+async function sweepMedia(kind, keepUrl) {
+  try {
+    const keep = keepUrl ? decodeURIComponent(keepUrl.split('?')[0].split('/').pop()) : null;
+    const { data } = await sb.storage.from(BUCKET).list(S.user.id, { limit: 100 });
+    const old = (data || []).filter(f => f.name.startsWith(kind + '-') && f.name !== keep).map(f => `${S.user.id}/${f.name}`);
+    if (old.length) await sb.storage.from(BUCKET).remove(old);
+  } catch (e) { /* limpar é só um bônus: se falhar, o perfil já foi salvo */ }
+}
+function dropPreviews() { ['avatar', 'banner'].forEach(k => { if (S.pf && S.pf[k].preview) URL.revokeObjectURL(S.pf[k].preview); }); }
+function rerender() { S.keepScroll = true; render(); }
+
+async function openProfile(uid) {
+  S.notice = '';
+  S.pv = await rpc('get_profile', uid && uid !== S.user.id ? { p_user: uid } : {});
+  if (S.pv.me && S.home) S.home.me = S.pv;
+  S.screen = 'profile'; render();
+}
+function beginEdit() {
+  const p = S.pv;
+  S.pf = { title: p.title || '', emoji: p.emoji || null, color: p.color || 'roxo', fav: p.fav || null, saving: false,
+           avatar: { file: null, preview: null, ext: null, remove: false }, banner: { file: null, preview: null, ext: null, remove: false } };
+  S.notice = ''; S.screen = 'profileedit'; render();
+}
+async function saveProfile() {
+  const pf = S.pf, cur = S.pv, up = [];
+  if (pf.saving) return;
+  pf.title = ($('pf-title') ? $('pf-title').value : pf.title).trim();
+  pf.saving = true; S.notice = ''; rerender();
+  let avatarUrl = pf.avatar.remove ? null : cur.avatar_url, bannerUrl = pf.banner.remove ? null : cur.banner_url;
+  try {
+    if (pf.avatar.file) { const u = await uploadMedia('avatar', { blob: pf.avatar.file, ext: pf.avatar.ext }); up.push(u.path); avatarUrl = u.url; }
+    if (pf.banner.file) { const u = await uploadMedia('banner', { blob: pf.banner.file, ext: pf.banner.ext }); up.push(u.path); bannerUrl = u.url; }
+    await rpc('update_profile', { p_title: pf.title, p_emoji: pf.emoji, p_color: pf.color, p_fav: pf.fav, p_avatar_url: avatarUrl, p_banner_url: bannerUrl });
+  } catch (e) {
+    if (up.length) { try { await sb.storage.from(BUCKET).remove(up); } catch (e2) {} }   // não deixa arquivo solto se deu erro
+    pf.saving = false; S.notice = friendly(e); rerender(); return;
+  }
+  if (pf.avatar.file || pf.avatar.remove) await sweepMedia('avatar', avatarUrl);   // apaga a foto antiga do banco de imagens
+  if (pf.banner.file || pf.banner.remove) await sweepMedia('banner', bannerUrl);   // apaga a capa antiga
+  dropPreviews();
+  try { S.pv = await rpc('get_profile'); if (S.home) S.home.me = S.pv; } catch (e) {}
+  S.pf = null; S.notice = ''; S.screen = 'profile'; render();
+}
+
 /* ---------- Duelo (desenhado em partes para não apagar o que a pessoa digita) ---------- */
 function meOpp(st) {
   const me = st.me, opp = me === 'host' ? 'guest' : 'host';
@@ -594,15 +802,16 @@ async function duelSubmit() {
 }
 
 /* ---------- Fluxo ---------- */
-const VIEWS = { auth: vAuth, home: vHome, endlesssetup: vEndlessSetup, free: vFreeSetup, duelsetup: vDuelSetup, ask: () => (isTheme(G.q) ? vTheme() : vAsk()), feedback: vFeedback, result: vResult };
+const VIEWS = { auth: vAuth, home: vHome, endlesssetup: vEndlessSetup, free: vFreeSetup, duelsetup: vDuelSetup, ask: () => (isTheme(G.q) ? vTheme() : vAsk()), feedback: vFeedback, result: vResult, profile: vProfile, profileedit: vProfileEdit };
 
 function render() {
+  const keepY = S.keepScroll ? window.scrollY : 0; S.keepScroll = false;
   cancelAnimationFrame(raf);
   document.querySelectorAll('audio,video').forEach(m => m.pause());
   if (G) G.playing = null;
   $('app').classList.toggle('wide', S.screen === 'home');
   $('app').innerHTML = VIEWS[S.screen]();
-  window.scrollTo(0, 0);
+  window.scrollTo(0, keepY);
   if (S.screen === 'ask' && isTheme(G.q)) {
     G.flash = null;
     const i0 = $('ans'); if (i0) i0.focus();
@@ -631,8 +840,8 @@ async function goHome(notice) {
   S.screen = 'home'; S.home = S.home || { daily: {}, board: { rows: [], resets_in_days: 7 } };
   render();
   try {
-    const [daily, board, endless] = await Promise.all([rpc('daily_status'), rpc('weekly_leaderboard'), rpc('endless_stats')]);
-    S.home = { daily, board, endless };
+    const [daily, board, endless, me] = await Promise.all([rpc('daily_status'), rpc('weekly_leaderboard'), rpc('endless_stats'), rpc('get_profile').catch(() => null)]);
+    S.home = { daily, board, endless, me };
   } catch (e) { S.notice = S.notice || friendly(e); }
   if (S.screen === 'home') render();
 }
@@ -712,7 +921,7 @@ document.addEventListener('click', async e => {
     switch (t.dataset.a) {
       case 'authmode': S.authMode = v; S.notice = ''; render(); break;
       case 'auth': await doAuth(); break;
-      case 'logout': stopAll(); await sb.auth.signOut(); sessionStorage.removeItem('qz_duel'); S = { ...S, user: null, home: null, screen: 'auth', notice: '' }; render(); break;
+      case 'logout': stopAll(); await sb.auth.signOut(); sessionStorage.removeItem('qz_duel'); S = { ...S, user: null, home: null, pv: null, pf: null, screen: 'auth', notice: '' }; render(); break;
       case 'home': goHome(); break;
       case 'daily': startRun('daily', await rpc('start_daily')); break;
       case 'freesetup': S.notice = ''; S.screen = 'free'; render(); break;
@@ -722,6 +931,16 @@ document.addEventListener('click', async e => {
       case 'submit': { const el = $('ans'); if (el && S.screen === 'ask') { const val = el.value.trim(); if (val) answerRun(val); else answerRun('', true); } else duelSubmit(); break; }
       case 'skip': if (S.screen === 'ask') answerRun('', true); else { const el = $('ans'); if (el) el.value = ''; duelSubmit(); } break;
       case 'palette': applyPalette(v); break;
+      case 'profile': await openProfile(v); break;
+      case 'profileedit': beginEdit(); break;
+      case 'pickfile': { const f = $('file' + v); if (f) f.click(); break; }
+      case 'dropfile': { const x = S.pf[v]; if (x.preview) URL.revokeObjectURL(x.preview); S.pf[v] = { file: null, preview: null, ext: null, remove: true }; S.pf.title = $('pf-title').value; rerender(); break; }
+      case 'pemoji': S.pf.emoji = v || null; S.pf.title = $('pf-title').value; rerender(); break;
+      case 'pcolor': S.pf.color = v; S.pf.title = $('pf-title').value; rerender(); break;
+      case 'pfav': S.pf.fav = S.pf.fav === v ? null : v; S.pf.title = $('pf-title').value; rerender(); break;
+      case 'saveprofile': await saveProfile(); break;
+      case 'canceledit': dropPreviews(); S.pf = null; S.notice = ''; S.screen = 'profile'; render(); break;
+      case 'reportprofile': { t.disabled = true; try { await rpc('report_profile', { p_user: v }); t.textContent = 'Obrigado! Vamos revisar.'; } catch (e2) { t.disabled = false; } break; }
       case 'jcat': S.joinCats[v] = !S.joinCats[v]; render(); break;
       case 'endlesssetup': S.notice = ''; S.screen = 'endlesssetup'; render(); break;
       case 'ecat': S.endCats[v] = !S.endCats[v]; render(); break;
@@ -782,12 +1001,28 @@ document.addEventListener('input', e => {
   }, 160);
 });
 
+document.addEventListener('change', async e => {
+  const id = e.target.id; if (id !== 'fileavatar' && id !== 'filebanner') return;
+  const kind = id === 'fileavatar' ? 'avatar' : 'banner', f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f || !S.pf) return;
+  S.pf.title = $('pf-title') ? $('pf-title').value : S.pf.title;
+  try {
+    const prep = await prepImage(f, kind), old = S.pf[kind];
+    if (old.preview) URL.revokeObjectURL(old.preview);
+    S.pf[kind] = { file: prep.blob, ext: prep.ext, preview: URL.createObjectURL(prep.blob), remove: false };
+    S.notice = '';
+  } catch (err) { S.notice = friendly(err); }
+  rerender();
+});
+
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const id = e.target.id;
   if (id === 'ans') { e.preventDefault(); if (S.screen === 'ask') { const val = e.target.value.trim(); answerRun(val, !val); } else duelSubmit(); }
   else if (id === 'nick') { e.preventDefault(); $('pw').focus(); }
   else if (id === 'pw') { e.preventDefault(); doAuth(); }
+  else if (id === 'pf-title') { e.preventDefault(); }
   else if (id === 'joincode') { e.preventDefault(); document.querySelector('[data-a="duelenter"]').click(); }
 });
 
