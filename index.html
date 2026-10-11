@@ -99,7 +99,8 @@ p{margin:0}
 .clue{font:600 1.05rem/1.45 Figtree,sans-serif}
 .qimg{display:block;width:100%;max-height:340px;object-fit:contain;border:3px solid var(--line);border-radius:14px;background:var(--bg)}
 .media{overflow:hidden;border:3px solid var(--line);border-radius:14px;background:var(--bg)}
-.media video{display:block;width:100%;max-height:300px;filter:blur(22px) saturate(.8);transform:scale(1.15);pointer-events:none}
+.media video{display:block;width:100%;max-height:300px;filter:blur(8px);transform:scale(1.05);pointer-events:none}
+.media img.cover{display:block;width:100%;max-height:260px;object-fit:cover;filter:blur(14px);transform:scale(1.1);pointer-events:none}
 .sugg{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .sugg:empty{display:none}
 .sugg button{width:100%;text-align:left;min-height:44px;padding:0 14px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:600 1rem Figtree,sans-serif;cursor:pointer}
@@ -130,7 +131,7 @@ p{margin:0}
   Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Deezer, Wikidata, Wikimedia Commons e TheMealDB.
   Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
   Aberturas e endings: AnimeThemes (<a href="https://animethemes.moe" target="_blank" rel="noopener">animethemes.moe</a>).
-  <br>Versão 1.7
+  <br>Versão 1.7.2
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -145,7 +146,7 @@ const CAT_KEYS = Object.keys(CATS);
 const DUEL_KEYS = CAT_KEYS.filter(k => k !== 'aberturas');   // aberturas não têm cronômetro: ficam fora do duelo
 const isTheme = q => q && (q.kind === 'abertura' || q.kind === 'ending');
 const STAGE_PTS = [1000, 600, 300];
-const THEME_NOTE = 'Aberturas e Endings tocam som (ligue o volume) e não têm cronômetro: só o som vale 1.000, com o vídeo borrado 600, com a dica 300. Começa desligado.';
+const THEME_NOTE = 'Aberturas e Endings tocam som (ligue o volume) e não têm cronômetro: só o som vale 1.000, com o vídeo borrado 600, com a dica e a capa borrada 300. Começa desligado.';
 
 /* ---------- Utilidades ---------- */
 const $ = id => document.getElementById(id);
@@ -220,7 +221,7 @@ function answerBox(q, stage) {
       autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Sua resposta">
     <ul id="sugg" class="sugg"></ul>
     <div class="btnrow"><button class="btn big" data-a="submit">Responder</button><button class="btn alt big" data-a="skip">${stage ? 'Desistir' : 'Pular'}</button></div>
-    ${stage && stage < 3 ? `<button class="btn alt big" data-a="reveal">${stage === 1 ? 'Mostrar o vídeo borrado (vale 600)' : 'Mostrar uma dica (vale 300)'}</button>` : ''}
+    ${stage && stage < 3 ? `<button class="btn alt big" data-a="reveal">${stage === 1 ? 'Mostrar o vídeo borrado (vale 600)' : 'Mostrar a dica e a capa borrada (vale 300)'}</button>` : ''}
   </section>`;
 }
 function chips(obj, action, keys = CAT_KEYS) {
@@ -380,6 +381,7 @@ function vTheme() {
     <span class="tag">${esc(CATS.aberturas)}</span>
     <p class="prompt">${esc(q.prompt)}</p>
     ${q.clue ? `<p class="clue">Dica: ${esc(q.clue)}</p>` : ''}
+    ${q.media_url ? `<div class="media"><img class="cover" src="${esc(q.media_url)}" alt="Capa do anime, borrada" referrerpolicy="no-referrer" decoding="async"></div>` : ''}
     ${st >= 2 && q.video_url ? `<div class="media"><video id="tvid" src="${esc(q.video_url)}" playsinline preload="metadata" disablepictureinpicture controlslist="nodownload noremoteplayback"></video></div>` : ''}
     <audio id="taud" src="${esc(q.audio_url)}" preload="none"></audio>
     <button class="btn big" data-a="play">▶ Ouvir ${st >= 2 ? 'o vídeo' : 'o som'}</button>
@@ -387,13 +389,13 @@ function vTheme() {
   ${answerBox(q, st)}`;
 }
 
-// Toca ~20 s: o som desde o começo; o vídeo (borrado) a partir do meio.
+// Toca ~20 s: o som desde o começo; o vídeo (borrado) a partir do meio (etapa 2) ou de um quarto (etapa 3).
 function playTheme(btn) {
   const v = $('tvid'), el = v || $('taud');
   if (!el) return;
   if (!el.paused) { el.pause(); btn.textContent = '▶ Ouvir de novo'; return; }
   const go = () => {
-    el.currentTime = v ? Math.max(0, (v.duration || 0) / 2 - 5) : 0;
+    el.currentTime = v ? Math.max(0, (v.duration || 0) * ((G.stage || 1) >= 3 ? 0.25 : 0.5) - 5) : 0;   // etapa 2: meio do vídeo; etapa 3: outro trecho (um quarto)
     const stopAt = el.currentTime + 20;
     el.ontimeupdate = () => { if (el.currentTime >= stopAt) { el.pause(); btn.textContent = '▶ Ouvir de novo'; } };
     el.onended = () => { btn.textContent = '▶ Ouvir de novo'; };
@@ -631,7 +633,7 @@ async function answerRun(guess, skip) {
   try {
     const a = await rpc('run_answer', { p_run: G.runId, p_guess: guess });
     if (a.retry) {   // abertura/ending: errou, então libera a próxima etapa
-      G.flash = a.stage === 2 ? 'Não é esse. Agora o vídeo borrado (vale 600).' : 'Ainda não. Aí vai uma dica (vale 300).';
+      G.flash = a.stage === 2 ? 'Não é esse. Agora o vídeo borrado (vale 600).' : 'Ainda não. Aí vão uma dica e a capa borrada (vale 300).';
       await nextQuestion(); return;
     }
     G.last = a; G.score = a.score; G.lives = a.lives;
