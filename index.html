@@ -98,6 +98,8 @@ p{margin:0}
 .prompt{font:700 1.3rem/1.25 "Bricolage Grotesque",Figtree,sans-serif}
 .clue{font:600 1.05rem/1.45 Figtree,sans-serif}
 .qimg{display:block;width:100%;max-height:340px;object-fit:contain;border:3px solid var(--line);border-radius:14px;background:var(--bg)}
+.media{overflow:hidden;border:3px solid var(--line);border-radius:14px;background:var(--bg)}
+.media video{display:block;width:100%;max-height:300px;filter:blur(22px) saturate(.8);transform:scale(1.15);pointer-events:none}
 .sugg{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .sugg:empty{display:none}
 .sugg button{width:100%;text-align:left;min-height:44px;padding:0 14px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:600 1rem Figtree,sans-serif;cursor:pointer}
@@ -125,9 +127,10 @@ p{margin:0}
     <button data-a="palette" data-v="oceano" aria-label="Cores: oceano" aria-pressed="false" style="--sw:#0E7C8B"></button>
     <button data-a="palette" data-v="noite" aria-label="Cores: noite" aria-pressed="false" style="--sw:#0E0B1F"></button>
   </div>
-  Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Wikidata, Wikimedia Commons e TheMealDB.
+  Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Deezer, Wikidata, Wikimedia Commons e TheMealDB.
   Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
-  <br>Versão 1.6
+  Aberturas e endings: AnimeThemes (<a href="https://animethemes.moe" target="_blank" rel="noopener">animethemes.moe</a>).
+  <br>Versão 1.7
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -137,8 +140,12 @@ p{margin:0}
 /* ---------- Configuração (chaves públicas: podem ficar no site) ---------- */
 const SUPABASE_URL = 'https://gjcttqcyoccxbjwdzukr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7FSEwMq4vkF_Lf12LVHMNg_C2NTq3xk';
-const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', animes:'Animes', celebridades:'Atores e atrizes', musica:'Música', artistas:'Esportistas e influenciadores', historia:'História', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
+const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', animes:'Animes', aberturas:'Aberturas e Endings', celebridades:'Atores e atrizes', musica:'Música', artistas:'Esportistas e influenciadores', historia:'História', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
 const CAT_KEYS = Object.keys(CATS);
+const DUEL_KEYS = CAT_KEYS.filter(k => k !== 'aberturas');   // aberturas não têm cronômetro: ficam fora do duelo
+const isTheme = q => q && (q.kind === 'abertura' || q.kind === 'ending');
+const STAGE_PTS = [1000, 600, 300];
+const THEME_NOTE = 'Aberturas e Endings tocam som (ligue o volume) e não têm cronômetro: só o som vale 1.000, com o vídeo borrado 600, com a dica 300. Começa desligado.';
 
 /* ---------- Utilidades ---------- */
 const $ = id => document.getElementById(id);
@@ -146,7 +153,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const fmt = n => Number(n || 0).toLocaleString('pt-BR');
 const slug = n => String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
 const emailOf = n => slug(n) + '@quizdagalera.app';
-const allOn = () => Object.fromEntries(CAT_KEYS.map(k => [k, true]));
+const allOn = () => Object.fromEntries(CAT_KEYS.map(k => [k, k !== 'aberturas']));
 const chosen = o => CAT_KEYS.filter(k => o[k]);
 
 if (!window.supabase) {
@@ -205,18 +212,19 @@ function questionBlock(q) {
     ${q.media_url ? `<img class="qimg" src="${esc(q.media_url)}" alt="Imagem da pergunta" referrerpolicy="no-referrer" decoding="async">` : ''}
   </section>`;
 }
-function answerBox(q) {
+function answerBox(q, stage) {
   const numeric = q.answer_type === 'year' || q.answer_type === 'number';
   return `
   <section class="stack" id="answerarea">
     <input id="ans" class="inp" ${numeric ? 'inputmode="numeric"' : ''} placeholder="${numeric ? 'Digite o número' : 'Digite a resposta'}"
       autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Sua resposta">
     <ul id="sugg" class="sugg"></ul>
-    <div class="btnrow"><button class="btn big" data-a="submit">Responder</button><button class="btn alt big" data-a="skip">Pular</button></div>
+    <div class="btnrow"><button class="btn big" data-a="submit">Responder</button><button class="btn alt big" data-a="skip">${stage ? 'Desistir' : 'Pular'}</button></div>
+    ${stage && stage < 3 ? `<button class="btn alt big" data-a="reveal">${stage === 1 ? 'Mostrar o vídeo borrado (vale 600)' : 'Mostrar uma dica (vale 300)'}</button>` : ''}
   </section>`;
 }
-function chips(obj, action) {
-  return `<div class="seg">${CAT_KEYS.map(k => `<button class="chip" data-a="${action}" data-v="${k}" aria-pressed="${!!obj[k]}">${obj[k] ? '✓ ' : ''}${CATS[k]}</button>`).join('')}</div>`;
+function chips(obj, action, keys = CAT_KEYS) {
+  return `<div class="seg">${keys.map(k => `<button class="chip" data-a="${action}" data-v="${k}" aria-pressed="${!!obj[k]}">${obj[k] ? '✓ ' : ''}${CATS[k]}</button>`).join('')}</div>`;
 }
 
 /* ---------- Telas ---------- */
@@ -304,6 +312,7 @@ function vFreeSetup() {
   <section class="card stack">
     <p class="lbl">Temas</p>
     ${chips(f.cats, 'fcat')}
+    <p class="sub">${THEME_NOTE}</p>
     <p class="lbl">Número de perguntas</p>
     <div class="seg">${[5, 10, 15].map(o => `<button class="chip" data-a="fnum" data-v="${o}" aria-pressed="${o === n}">${o}</button>`).join('')}</div>
     <button class="btn big" data-a="startfree" ${chosen(f.cats).length ? '' : 'disabled'}>Começar</button>
@@ -318,6 +327,7 @@ function vEndlessSetup() {
     <p>Você começa com 5 vidas. Errar, pular ou deixar o tempo acabar tira uma vida, e o jogo termina quando elas acabam. Não há limite de perguntas.</p>
     <p class="lbl">Temas</p>
     ${chips(S.endCats, 'ecat')}
+    <p class="sub">${THEME_NOTE}</p>
     <button class="btn big" data-a="startendless" ${chosen(S.endCats).length ? '' : 'disabled'}>Começar</button>
   </section>`;
 }
@@ -329,14 +339,14 @@ function vDuelSetup() {
   <section class="card stack">
     <h2>Criar sala</h2>
     <p class="sub">Escolha os seus temas. Metade das perguntas vem deles; a outra metade vem dos temas que o seu amigo escolher.</p>
-    ${chips(S.duelCats, 'dcat')}
+    ${chips(S.duelCats, 'dcat', DUEL_KEYS)}
     <button class="btn big" data-a="duelcreate" ${chosen(S.duelCats).length ? '' : 'disabled'}>Criar sala</button>
   </section>
   <section class="card stack">
     <h2>Entrar em uma sala</h2>
     <input id="joincode" class="inp" maxlength="5" placeholder="Código de 5 letras" autocomplete="off" autocapitalize="characters">
     <p class="sub">Seus temas (metade das perguntas vem dos seus, metade dos temas de quem criou a sala):</p>
-    ${chips(S.joinCats, 'jcat')}
+    ${chips(S.joinCats, 'jcat', DUEL_KEYS)}
     <button class="btn big" data-a="duelenter" ${chosen(S.joinCats).length ? '' : 'disabled'}>Entrar</button>
   </section>`;
 }
@@ -358,6 +368,38 @@ function vAsk() {
   <div class="bar" aria-hidden="true"><i id="bar"></i></div>
   ${questionBlock(q)}
   ${answerBox(q)}`;
+}
+
+function vTheme() {
+  const q = G.q, st = G.stage || 1;
+  return `
+  ${runHead()}
+  ${G.flash ? `<p class="flash" role="status">${esc(G.flash)}</p>` : ''}
+  <div class="ticker"><b>${fmt(STAGE_PTS[st - 1])}</b><span>pontos valendo agora</span></div>
+  <section class="card stack">
+    <span class="tag">${esc(CATS.aberturas)}</span>
+    <p class="prompt">${esc(q.prompt)}</p>
+    ${q.clue ? `<p class="clue">Dica: ${esc(q.clue)}</p>` : ''}
+    ${st >= 2 && q.video_url ? `<div class="media"><video id="tvid" src="${esc(q.video_url)}" playsinline preload="metadata" disablepictureinpicture controlslist="nodownload noremoteplayback"></video></div>` : ''}
+    <audio id="taud" src="${esc(q.audio_url)}" preload="none"></audio>
+    <button class="btn big" data-a="play">▶ Ouvir ${st >= 2 ? 'o vídeo' : 'o som'}</button>
+  </section>
+  ${answerBox(q, st)}`;
+}
+
+// Toca ~20 s: o som desde o começo; o vídeo (borrado) a partir do meio.
+function playTheme(btn) {
+  const v = $('tvid'), el = v || $('taud');
+  if (!el) return;
+  if (!el.paused) { el.pause(); btn.textContent = '▶ Ouvir de novo'; return; }
+  const go = () => {
+    el.currentTime = v ? Math.max(0, (v.duration || 0) / 2 - 5) : 0;
+    const stopAt = el.currentTime + 20;
+    el.ontimeupdate = () => { if (el.currentTime >= stopAt) { el.pause(); btn.textContent = '▶ Ouvir de novo'; } };
+    el.onended = () => { btn.textContent = '▶ Ouvir de novo'; };
+    el.play().then(() => { btn.textContent = '⏸ Pausar'; }).catch(() => { btn.textContent = 'Não consegui tocar. Toque de novo'; });
+  };
+  if (v && v.readyState < 1) { v.addEventListener('loadedmetadata', go, { once: true }); v.load(); } else go();
 }
 
 function vFeedback() {
@@ -526,14 +568,18 @@ async function duelSubmit() {
 }
 
 /* ---------- Fluxo ---------- */
-const VIEWS = { auth: vAuth, home: vHome, endlesssetup: vEndlessSetup, free: vFreeSetup, duelsetup: vDuelSetup, ask: vAsk, feedback: vFeedback, result: vResult };
+const VIEWS = { auth: vAuth, home: vHome, endlesssetup: vEndlessSetup, free: vFreeSetup, duelsetup: vDuelSetup, ask: () => (isTheme(G.q) ? vTheme() : vAsk()), feedback: vFeedback, result: vResult };
 
 function render() {
   cancelAnimationFrame(raf);
+  document.querySelectorAll('audio,video').forEach(m => m.pause());
   $('app').classList.toggle('wide', S.screen === 'home');
   $('app').innerHTML = VIEWS[S.screen]();
   window.scrollTo(0, 0);
-  if (S.screen === 'ask') {
+  if (S.screen === 'ask' && isTheme(G.q)) {
+    G.flash = null;
+    const i0 = $('ans'); if (i0) i0.focus();
+  } else if (S.screen === 'ask') {
     G.flash = null;
     const i = $('ans'); if (i) i.focus();
     const total = G.limit || 20, bar = $('bar'), worth = $('worth');
@@ -573,6 +619,7 @@ async function nextQuestion() {
   }
   G.q = r.question; G.index = r.index; G.total = r.total; G.score = r.score; G.lives = r.lives;
   G.limit = r.limit || 20;
+  G.stage = r.stage || 1;
   G.endAt = performance.now() + r.seconds_left * 1000;
   G.busy = false;
   S.screen = 'ask'; render();
@@ -583,6 +630,10 @@ async function answerRun(guess, skip) {
   G.busy = true; cancelAnimationFrame(raf);
   try {
     const a = await rpc('run_answer', { p_run: G.runId, p_guess: guess });
+    if (a.retry) {   // abertura/ending: errou, então libera a próxima etapa
+      G.flash = a.stage === 2 ? 'Não é esse. Agora o vídeo borrado (vale 600).' : 'Ainda não. Aí vai uma dica (vale 300).';
+      await nextQuestion(); return;
+    }
     G.last = a; G.score = a.score; G.lives = a.lives;
     if (skip && !a.correct && !(G.mode === 'endless' && a.finished)) {   // pular vai direto para a próxima, avisando qual era a resposta
       G.flash = `Você pulou${G.mode === 'endless' ? ' e perdeu uma vida' : ''}. A resposta era: ${a.answer}`;
@@ -650,6 +701,8 @@ document.addEventListener('click', async e => {
       case 'startendless': startRun('endless', await rpc('start_endless', { p_categories: chosen(S.endCats) })); break;
       case 'pick': { const i = $('ans'); if (i) { i.value = v; $('sugg').innerHTML = ''; i.focus(); } break; }
       case 'next': await nextQuestion(); break;
+      case 'play': playTheme(t); break;
+      case 'reveal': await rpc('run_reveal', { p_run: G.runId }); await nextQuestion(); break;
       case 'report': { t.disabled = true; try { await rpc('report_question', { p_id: +t.dataset.id }); t.textContent = 'Obrigado! Vamos revisar essa pergunta.'; } catch (e2) { t.disabled = false; } break; }
       case 'copy': {
         const r = G.result, d = new Date();
