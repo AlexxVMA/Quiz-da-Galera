@@ -32,6 +32,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
 .wrap{max-width:520px;margin:0 auto;padding:20px 16px 24px;display:grid;gap:18px}
+.wrap.twide{max-width:780px}
 .home{display:grid;gap:18px;grid-template-areas:"main" "side"}
 .home .main{grid-area:main;display:grid;gap:18px;align-content:start}
 .home .side{grid-area:side;display:grid;gap:18px;align-content:start}
@@ -102,12 +103,12 @@ p{margin:0}
 .clue{font:600 1.05rem/1.45 Figtree,sans-serif}
 .qimg{display:block;width:100%;max-height:340px;object-fit:contain;border:3px solid var(--line);border-radius:14px;background:var(--bg)}
 .media{overflow:hidden;border:3px solid var(--line);border-radius:14px;background:var(--bg)}
-.media video{display:block;width:100%;max-height:300px;filter:blur(6px);transform:scale(1.04);pointer-events:none}
+.media video{display:block;width:100%;max-height:460px;filter:blur(6px);transform:scale(1.04);pointer-events:none}
 .media img.cover{display:block;width:100%;max-height:260px;object-fit:cover;filter:blur(7px);transform:scale(1.05);pointer-events:none}
-.hintgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,190px);gap:12px;align-items:start}
+.hintgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,210px);gap:12px;align-items:start}
 .hintbox{display:grid;gap:8px;border:3px solid var(--line);border-radius:14px;padding:10px;background:var(--paper)}
 .hintbox .media img.cover{max-height:none;aspect-ratio:2/3;transform:scale(1.05)}
-@media (max-width:560px){.hintgrid{grid-template-columns:1fr}.hintbox{grid-template-columns:1fr 110px;align-items:start}.hintbox b{grid-column:1/-1}}
+@media (max-width:740px){.hintgrid{grid-template-columns:1fr}.hintbox{grid-template-columns:1fr 110px;align-items:start}.hintbox b{grid-column:1/-1}}
 .sugg{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .sugg:empty{display:none}
 .sugg button{width:100%;text-align:left;min-height:44px;padding:0 14px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:600 1rem Figtree,sans-serif;cursor:pointer}
@@ -146,6 +147,24 @@ img.av{display:block}
 .swatches button{width:40px;height:40px;border-radius:50%;border:3px solid var(--line);background:var(--sw);cursor:pointer;padding:0}
 .swatches button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ink)}
 .prow{display:flex;align-items:center;gap:14px}
+.gifpanel{border:3px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
+.gifbar{display:grid;grid-template-columns:1fr auto;gap:8px}
+.gifgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:340px;overflow:auto}
+.gifcell{padding:0;border:3px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);cursor:pointer;aspect-ratio:1}
+.gifcell img{display:block;width:100%;height:100%;object-fit:cover}
+.gifcell:hover,.gifcell:focus-visible{border-color:var(--accent)}
+/* Cartão de perfil (passar o mouse, ou tocar no nome no celular) */
+.pop{position:fixed;z-index:50;width:min(300px,calc(100vw - 24px));background:var(--paper);color:var(--ink);border:3px solid var(--line);border-radius:18px;box-shadow:5px 5px 0 var(--shade);overflow:hidden}
+.pop .pbanner{border:0;border-bottom:3px solid var(--line);border-radius:0}
+.pop .phead{margin-top:-34px;padding-left:14px}
+.pop .pbody{padding:8px 14px 14px;display:grid;gap:8px}
+.pop .pname{font:800 1.4rem/1.1 "Bricolage Grotesque",Figtree,sans-serif;margin:0;overflow-wrap:anywhere}
+.pop .stats{gap:8px}
+.pop .stat{padding:6px 10px}
+.pop .stat b{font-size:1.15rem}
+.pop .stat span{font-size:.78rem}
+.pop .loading{padding:18px;color:var(--muted)}
+.board li[data-uid]{cursor:default}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -159,7 +178,7 @@ img.av{display:block}
   </div>
   Dados e imagens: TMDB, RAWG (<a href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>), AniList, Deezer, Wikidata, Wikimedia Commons e TheMealDB.
   Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
-  Aberturas e endings: AnimeThemes (<a href="https://animethemes.moe" target="_blank" rel="noopener">animethemes.moe</a>).
+  Openings e endings: AnimeThemes (<a href="https://animethemes.moe" target="_blank" rel="noopener">animethemes.moe</a>). GIFs do perfil: <a href="https://giphy.com" target="_blank" rel="noopener">GIPHY</a>.
   <br>Versão 1.8
 </footer>
 
@@ -170,18 +189,20 @@ img.av{display:block}
 /* ---------- Configuração (chaves públicas: podem ficar no site) ---------- */
 const SUPABASE_URL = 'https://gjcttqcyoccxbjwdzukr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7FSEwMq4vkF_Lf12LVHMNg_C2NTq3xk';
-const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', animes:'Animes', aberturas:'Aberturas e Endings', celebridades:'Atores e atrizes', musica:'Música', artistas:'Esportistas e influenciadores', historia:'História', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
+const CATS = { jogos:'Jogos', filmes:'Filmes', series:'Séries', animes:'Animes', aberturas:'Openings e Endings (animes)', celebridades:'Atores e atrizes', musica:'Música', artistas:'Esportistas e influenciadores', historia:'História', geografia:'Geografia', culinaria:'Culinária', quimica:'Química' };
 const CAT_KEYS = Object.keys(CATS);
 const DUEL_KEYS = CAT_KEYS.filter(k => k !== 'aberturas');   // aberturas não têm cronômetro: ficam fora do duelo
 const isTheme = q => q && (q.kind === 'abertura' || q.kind === 'ending');
 const STAGE_PTS = [1000, 600, 300];
 const BUCKET = 'profile-media';
+// Chave pública do Giphy (developers.giphy.com). Cole entre as aspas; enquanto estiver vazia, o botão "Buscar GIF" não aparece.
+const GIPHY_KEY = '';
 const PCOL = { roxo: { bg: '#5B3DF5', fg: '#FFFFFF', nome: 'Roxo' }, oceano: { bg: '#0E7C8B', fg: '#FFFFFF', nome: 'Oceano' }, verde: { bg: '#19C39B', fg: '#062B23', nome: 'Verde' },
   azul: { bg: '#2F6FED', fg: '#FFFFFF', nome: 'Azul' }, coral: { bg: '#FF6F59', fg: '#2A0B05', nome: 'Coral' }, grafite: { bg: '#3A3A52', fg: '#FFFFFF', nome: 'Grafite' } };
 const EMOJIS = ['😎', '🤓', '🥳', '🤖', '👾', '🎮', '🎬', '🎧', '⚽', '🍕', '🐱', '🐶', '🦊', '🐼', '🐲', '🚀'];
 const IMG_SIZE = { avatar: [400, 400], banner: [1200, 400] };           // tamanho final (a imagem é recortada no centro)
 const GIF_MAX = { avatar: 2 * 1024 * 1024, banner: 3 * 1024 * 1024 };   // GIF não é reduzido, então tem limite
-const THEME_NOTE = 'Aberturas e Endings tocam som (ligue o volume) e não têm cronômetro: só o som vale 1.000, com o vídeo borrado 600, com a dica e a capa borrada 300. Começa desligado.';
+const THEME_NOTE = 'Openings e Endings tocam som (ligue o volume) e não têm cronômetro: só o som vale 1.000, com o vídeo borrado 600, com a dica e a capa borrada 300. Começa desligado.';
 
 /* ---------- Utilidades ---------- */
 const $ = id => document.getElementById(id);
@@ -230,7 +251,7 @@ function avatarHTML(p, size) {
   const letter = String(p.name || '?').trim().charAt(0).toUpperCase() || '?';
   return `<span class="av" style="${st}" aria-hidden="true">${esc(p.emoji || letter)}</span>`;
 }
-const nameOf = r => r.uid ? `<button class="nm nmbtn" data-a="profile" data-v="${esc(r.uid)}">${esc(r.name)}</button>` : `<span class="nm">${esc(r.name)}</span>`;
+const nameOf = r => r.uid ? `<button class="nm nmbtn" data-a="peek" data-v="${esc(r.uid)}">${esc(r.name)}</button>` : `<span class="nm">${esc(r.name)}</span>`;
 
 /* ---------- Estado ---------- */
 let S = { screen: 'boot', user: null, home: null, authMode: 'login', notice: '', free: { cats: allOn(), n: 10 }, duelCats: allOn(), joinCats: allOn(), endCats: allOn() };
@@ -316,7 +337,7 @@ function vHome() {
         <h2>Placar da semana</h2>
         <p class="sub">Só conta a partida do dia. Zera na segunda-feira, ${left === 1 ? 'amanhã' : `daqui a ${left} dias`}.</p>
         ${lb.rows.length
-          ? `<ol class="board">${lb.rows.slice(0, 15).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span>${avatarHTML(r, 34)}${nameOf(r)}<span class="dy">${r.days} ${r.days === 1 ? 'dia' : 'dias'}</span><span class="pt">${fmt(r.points)}</span></li>`).join('')}</ol>`
+          ? `<ol class="board">${lb.rows.slice(0, 15).map((r, i) => `<li class="${r.me ? 'me' : ''}" data-uid="${esc(r.uid || '')}"><span class="rk">${i + 1}</span>${avatarHTML(r, 34)}${nameOf(r)}<span class="dy">${r.days} ${r.days === 1 ? 'dia' : 'dias'}</span><span class="pt">${fmt(r.points)}</span></li>`).join('')}</ol>`
           : `<p class="empty">Ninguém pontuou nesta semana ainda. Jogue a partida do dia para abrir o placar.</p>`}
       </section>
     </aside>
@@ -340,7 +361,7 @@ function vHome() {
         <h2>Modo ilimitado</h2>
         <p>Sem limite de perguntas e com 5 vidas: cada erro tira uma. Vá até onde conseguir.</p>
         <p class="sub">Seu recorde: <b>${fmt((h.endless || {}).best)}</b> pontos</p>
-        ${((h.endless || {}).rows || []).length ? `<ol class="board">${h.endless.rows.slice(0, 5).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span>${avatarHTML(r, 34)}${nameOf(r)}<span class="dy"></span><span class="pt">${fmt(r.score)}</span></li>`).join('')}</ol><p class="sub">Melhores da semana.</p>` : ''}
+        ${((h.endless || {}).rows || []).length ? `<ol class="board">${h.endless.rows.slice(0, 5).map((r, i) => `<li class="${r.me ? 'me' : ''}" data-uid="${esc(r.uid || '')}"><span class="rk">${i + 1}</span>${avatarHTML(r, 34)}${nameOf(r)}<span class="dy"></span><span class="pt">${fmt(r.score)}</span></li>`).join('')}</ol><p class="sub">Melhores da semana.</p>` : ''}
         <button class="btn" data-a="endlesssetup">Jogar</button>
       </section>
       <section class="card stack">
@@ -426,7 +447,7 @@ function themeMedia() {
   const q = G.q, st = G.stage || 1, vw = Math.min(G.view || st, st);
   const tab = (n, label) => `<button class="chip" data-a="view" data-v="${n}" aria-pressed="${vw === n}" ${n > st ? 'disabled' : ''}>${label}</button>`;
   const mode = vw === 1 ? 'a' : (vw === 2 ? 'v2' : 'v3');
-  const label = vw === 1 ? '▶ Ouvir o som' : (vw === 2 ? '▶ Ver o vídeo (trecho do meio)' : '▶ Ver o vídeo (outro trecho)');
+  const label = vw === 1 ? '▶ Ouvir o som' : '▶ Ver o vídeo';
   const hint = vw === 3 && (q.clue || q.media_url) ? `<aside class="hintbox"><b>Dica</b>${q.clue ? `<p class="clue">${esc(q.clue)}</p>` : ''}${q.media_url ? `<div class="media"><img class="cover" src="${esc(q.media_url)}" alt="Capa do anime, borrada" referrerpolicy="no-referrer" decoding="async"></div>` : ''}</aside>` : '';
   return `
     <div class="seg" role="group" aria-label="Etapas">${tab(1, '1 · Som')}${tab(2, '2 · Vídeo')}${tab(3, '3 · Dica')}</div>
@@ -556,12 +577,12 @@ function vProfile() {
   </div>`;
 }
 
-function pfUrl(kind) { const x = S.pf[kind]; return x.file ? x.preview : (x.remove ? null : S.pv[kind + '_url']); }
+function pfUrl(kind) { const x = S.pf[kind]; return x.gif || (x.file ? x.preview : (x.remove ? null : S.pv[kind + '_url'])); }
 
 function vProfileEdit() {
   const pf = S.pf, c = PCOL[pf.color] || PCOL.roxo, av = pfUrl('avatar'), bn = pfUrl('banner');
-  const pick = (kind, has, label) => `<div class="pair"><button class="btn" data-a="pickfile" data-v="${kind}">${label}</button>${has ? `<button class="btn alt" data-a="dropfile" data-v="${kind}">Remover</button>` : ''}</div>
-    <input type="file" id="file${kind}" accept="image/*" hidden>`;
+  const pick = (kind, has, label) => `<div class="pair"><button class="btn" data-a="pickfile" data-v="${kind}">${label}</button>${GIPHY_KEY ? `<button class="btn alt" data-a="gifopen" data-v="${kind}">Buscar GIF</button>` : ''}${has ? `<button class="btn alt" data-a="dropfile" data-v="${kind}">Remover</button>` : ''}</div>
+    <input type="file" id="file${kind}" accept="image/*" hidden>${pf.gp && pf.gp.kind === kind ? gifPanel() : ''}`;
   return `
   <h1 class="mark">Editar perfil</h1>
   ${S.notice ? `<p class="err" role="alert">${esc(S.notice)}</p>` : ''}
@@ -644,7 +665,51 @@ async function sweepMedia(kind, keepUrl) {
   } catch (e) { /* limpar é só um bônus: se falhar, o perfil já foi salvo */ }
 }
 function dropPreviews() { ['avatar', 'banner'].forEach(k => { if (S.pf && S.pf[k].preview) URL.revokeObjectURL(S.pf[k].preview); }); }
-function rerender() { S.keepScroll = true; render(); }
+function rerender() {
+  if (S.screen === 'profileedit' && S.pf && $('pf-title')) S.pf.title = $('pf-title').value;
+  S.keepScroll = true; render();
+}
+
+/* ---------- Buscador de GIFs (Giphy) ---------- */
+const gifCache = {};
+const GIF_URL = /^https:\/\/(media[0-9]*|i)\.giphy\.com\/media\/[A-Za-z0-9._~%+=\/-]+\.gif$/;
+const gifClean = u => String(u || '').split('?')[0];
+async function gifFetch(q) {
+  const base = q ? 'https://api.giphy.com/v1/gifs/search' : 'https://api.giphy.com/v1/gifs/trending';
+  const url = `${base}?api_key=${encodeURIComponent(GIPHY_KEY)}&limit=24&rating=pg&lang=pt${q ? '&q=' + encodeURIComponent(q) : ''}`;
+  const r = await fetch(url);
+  if (r.status === 429) throw new Error('Muitas buscas de GIF agora. Tente de novo em alguns minutos.');
+  if (!r.ok) throw new Error('Não consegui buscar GIFs agora. Tente de novo daqui a pouco.');
+  const j = await r.json();
+  return (j.data || []).map(g => {
+    const im = g.images || {}, pick = k => gifClean(im[k] && im[k].url);
+    return { title: g.title || '', thumb: (im.fixed_width_small && im.fixed_width_small.url) || (im.fixed_width && im.fixed_width.url) || '',
+             avatar: pick('fixed_width'), banner: pick('downsized') || pick('fixed_height') };
+  }).filter(x => x.thumb && GIF_URL.test(x.avatar) && GIF_URL.test(x.banner));
+}
+async function gifLoad(q) {
+  const g = S.pf && S.pf.gp; if (!g) return;
+  g.loading = true; g.err = ''; rerender();
+  try {
+    const key = q || '__trending__';
+    if (!gifCache[key]) gifCache[key] = await gifFetch(q);
+    g.items = gifCache[key];
+  } catch (e) { g.items = []; g.err = e.message || 'Não consegui buscar GIFs.'; }
+  if (!(S.pf && S.pf.gp === g)) return;
+  g.loading = false; rerender();
+}
+function gifPanel() {
+  const g = S.pf.gp;
+  return `<div class="gifpanel stack">
+    <div class="gifbar"><input id="gifq" class="inp" type="search" placeholder="Buscar GIF (ex.: anime, gato)" value="${esc(g.q)}" autocomplete="off" enterkeyhint="search"><button class="btn" data-a="gifsearch">Buscar</button></div>
+    ${g.err ? `<p class="err" role="alert">${esc(g.err)}</p>` : ''}
+    ${g.loading ? '<p class="sub">Buscando...</p>' : (g.items.length
+      ? `<div class="gifgrid">${g.items.map((it, i) => `<button class="gifcell" data-a="gifpick" data-v="${i}" aria-label="${esc(it.title || 'GIF')}"><img src="${esc(it.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"></button>`).join('')}</div>`
+      : (g.err ? '' : '<p class="sub">Nenhum GIF encontrado.</p>'))}
+    <p class="sub">Powered by GIPHY · <button class="link" data-a="gifclose">Fechar</button></p>
+  </div>`;
+}
+
 
 async function openProfile(uid) {
   S.notice = '';
@@ -663,7 +728,7 @@ async function saveProfile() {
   if (pf.saving) return;
   pf.title = ($('pf-title') ? $('pf-title').value : pf.title).trim();
   pf.saving = true; S.notice = ''; rerender();
-  let avatarUrl = pf.avatar.remove ? null : cur.avatar_url, bannerUrl = pf.banner.remove ? null : cur.banner_url;
+  let avatarUrl = pf.avatar.gif || (pf.avatar.remove ? null : cur.avatar_url), bannerUrl = pf.banner.gif || (pf.banner.remove ? null : cur.banner_url);
   try {
     if (pf.avatar.file) { const u = await uploadMedia('avatar', { blob: pf.avatar.file, ext: pf.avatar.ext }); up.push(u.path); avatarUrl = u.url; }
     if (pf.banner.file) { const u = await uploadMedia('banner', { blob: pf.banner.file, ext: pf.banner.ext }); up.push(u.path); bannerUrl = u.url; }
@@ -672,8 +737,8 @@ async function saveProfile() {
     if (up.length) { try { await sb.storage.from(BUCKET).remove(up); } catch (e2) {} }   // não deixa arquivo solto se deu erro
     pf.saving = false; S.notice = friendly(e); rerender(); return;
   }
-  if (pf.avatar.file || pf.avatar.remove) await sweepMedia('avatar', avatarUrl);   // apaga a foto antiga do banco de imagens
-  if (pf.banner.file || pf.banner.remove) await sweepMedia('banner', bannerUrl);   // apaga a capa antiga
+  if (pf.avatar.file || pf.avatar.remove || pf.avatar.gif) await sweepMedia('avatar', avatarUrl);   // apaga a foto antiga do banco de imagens
+  if (pf.banner.file || pf.banner.remove || pf.banner.gif) await sweepMedia('banner', bannerUrl);   // apaga a capa antiga
   dropPreviews();
   try { S.pv = await rpc('get_profile'); if (S.home) S.home.me = S.pv; } catch (e) {}
   S.pf = null; S.notice = ''; S.screen = 'profile'; render();
@@ -805,11 +870,13 @@ async function duelSubmit() {
 const VIEWS = { auth: vAuth, home: vHome, endlesssetup: vEndlessSetup, free: vFreeSetup, duelsetup: vDuelSetup, ask: () => (isTheme(G.q) ? vTheme() : vAsk()), feedback: vFeedback, result: vResult, profile: vProfile, profileedit: vProfileEdit };
 
 function render() {
+  hidePop();
   const keepY = S.keepScroll ? window.scrollY : 0; S.keepScroll = false;
   cancelAnimationFrame(raf);
   document.querySelectorAll('audio,video').forEach(m => m.pause());
   if (G) G.playing = null;
   $('app').classList.toggle('wide', S.screen === 'home');
+  $('app').classList.toggle('twide', (S.screen === 'ask' || S.screen === 'feedback') && !!G && !!G.q && isTheme(G.q));
   $('app').innerHTML = VIEWS[S.screen]();
   window.scrollTo(0, keepY);
   if (S.screen === 'ask' && isTheme(G.q)) {
@@ -913,6 +980,89 @@ async function doAuth() {
   } catch (e) { S.notice = friendly(e); render(); const n = $('nick'); if (n) n.value = name; }
 }
 
+
+/* ---------- Cartão de perfil ao passar o mouse ---------- */
+let popEl = null, popTimer = 0, hideTimer = 0, popSeq = 0, popAnchor = null;
+const popCache = {};
+const noHover = () => window.matchMedia && matchMedia('(hover: none)').matches;
+
+function hidePop() {
+  clearTimeout(popTimer); clearTimeout(hideTimer); popSeq++; popAnchor = null;
+  if (popEl) { popEl.remove(); popEl = null; }
+}
+function placePop() {
+  if (!popEl || !popAnchor || !document.body.contains(popAnchor)) return;
+  const r = popAnchor.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const pw = popEl.offsetWidth, ph = popEl.offsetHeight, m = 8, clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+  let left, top;
+  if (r.right + 12 + pw <= vw - m) { left = r.right + 12; top = clamp(r.top - 20, m, vh - ph - m); }          // à direita
+  else if (r.left - 12 - pw >= m) { left = r.left - 12 - pw; top = clamp(r.top - 20, m, vh - ph - m); }      // à esquerda
+  else {                                                                                                    // embaixo ou em cima
+    left = clamp(r.left, m, vw - pw - m);
+    top = r.bottom + 8 + ph <= vh - m ? r.bottom + 8 : (r.top - 8 - ph >= m ? r.top - 8 - ph : clamp(r.bottom + 8, m, vh - ph - m));
+  }
+  popEl.style.left = left + 'px'; popEl.style.top = top + 'px';
+}
+function popHTML(p) {
+  const st = p.stats || {}, c = PCOL[p.color] || PCOL.roxo, dash = '—';
+  const stat = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
+  return `
+  <div class="pbanner" style="--c:${c.bg}">${p.banner_url ? `<img src="${esc(p.banner_url)}" alt="" referrerpolicy="no-referrer" decoding="async">` : ''}</div>
+  <div class="phead">${avatarHTML(p, 68)}</div>
+  <div class="pbody">
+    <p class="pname">${esc(p.name)}</p>
+    ${p.title ? `<p class="clue">${esc(p.title)}</p>` : ''}
+    ${p.fav ? `<span class="tag">Tema favorito: ${esc(CATS[p.fav] || p.fav)}</span>` : ''}
+    <div class="stats">
+      ${stat(st.streak == null ? dash : fmt(st.streak), 'dias seguidos')}
+      ${stat(st.week_rank ? st.week_rank + 'º' : dash, 'na semana')}
+      ${stat(st.daily_best == null ? dash : fmt(st.daily_best), 'melhor do dia')}
+      ${stat(st.endless_best ? fmt(st.endless_best) : dash, 'recorde ilimitado')}
+    </div>
+    <button class="btn" data-a="profile" data-v="${esc(p.uid)}">Ver perfil completo</button>
+  </div>`;
+}
+async function showPop(anchor) {
+  const uid = anchor && anchor.dataset.uid; if (!uid) return;
+  if (popAnchor === anchor && popEl) return;
+  hidePop();
+  popAnchor = anchor; const mine = ++popSeq;
+  popEl = document.createElement('div');
+  popEl.className = 'pop'; popEl.setAttribute('role', 'dialog'); popEl.setAttribute('aria-label', 'Perfil do jogador');
+  popEl.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+  popEl.addEventListener('mouseleave', () => { clearTimeout(hideTimer); hideTimer = setTimeout(hidePop, 200); });
+  const draw = p => { popEl.innerHTML = popHTML(p); placePop(); popEl.querySelectorAll('img').forEach(i => i.addEventListener('load', placePop)); };
+  document.body.appendChild(popEl);
+  if (popCache[uid] && Date.now() - popCache[uid].t < 60000) { draw(popCache[uid].p); return; }
+  popEl.innerHTML = '<p class="loading">Carregando...</p>'; placePop();
+  try {
+    const p = await rpc('get_profile', uid === (S.user && S.user.id) ? {} : { p_user: uid });
+    popCache[uid] = { p, t: Date.now() };
+    if (mine !== popSeq || !popEl) return;
+    draw(p);
+  } catch (e) { if (mine === popSeq) hidePop(); }
+}
+
+document.addEventListener('mouseover', e => {
+  if (noHover()) return;
+  const li = e.target.closest && e.target.closest('.board li[data-uid]');
+  if (!li || !li.dataset.uid) return;
+  clearTimeout(hideTimer);
+  if (popAnchor === li) return;
+  clearTimeout(popTimer); popTimer = setTimeout(() => showPop(li), 250);
+});
+document.addEventListener('mouseout', e => {
+  if (noHover()) return;
+  const li = e.target.closest && e.target.closest('.board li[data-uid]'); if (!li) return;
+  const to = e.relatedTarget;
+  if (to && (li.contains(to) || (popEl && popEl.contains(to)))) return;
+  clearTimeout(popTimer); clearTimeout(hideTimer); hideTimer = setTimeout(hidePop, 200);
+});
+document.addEventListener('focusin', e => { const b = e.target.closest && e.target.closest('.board .nmbtn'); if (b && !noHover()) showPop(b.closest('li')); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hidePop(); });
+document.addEventListener('scroll', () => { if (popEl) hidePop(); }, { passive: true });
+document.addEventListener('pointerdown', e => { if (popEl && !popEl.contains(e.target) && !(e.target.closest && e.target.closest('.board li[data-uid]'))) hidePop(); });
+
 /* ---------- Eventos ---------- */
 document.addEventListener('click', async e => {
   const t = e.target.closest('[data-a]'); if (!t) return;
@@ -931,13 +1081,19 @@ document.addEventListener('click', async e => {
       case 'submit': { const el = $('ans'); if (el && S.screen === 'ask') { const val = el.value.trim(); if (val) answerRun(val); else answerRun('', true); } else duelSubmit(); break; }
       case 'skip': if (S.screen === 'ask') answerRun('', true); else { const el = $('ans'); if (el) el.value = ''; duelSubmit(); } break;
       case 'palette': applyPalette(v); break;
-      case 'profile': await openProfile(v); break;
+      case 'profile': hidePop(); await openProfile(v); break;
+      case 'peek': if (noHover()) { const li = t.closest('li'); if (popAnchor === li && popEl) hidePop(); else await showPop(li); } else await openProfile(v); break;
       case 'profileedit': beginEdit(); break;
       case 'pickfile': { const f = $('file' + v); if (f) f.click(); break; }
       case 'dropfile': { const x = S.pf[v]; if (x.preview) URL.revokeObjectURL(x.preview); S.pf[v] = { file: null, preview: null, ext: null, remove: true }; S.pf.title = $('pf-title').value; rerender(); break; }
       case 'pemoji': S.pf.emoji = v || null; S.pf.title = $('pf-title').value; rerender(); break;
       case 'pcolor': S.pf.color = v; S.pf.title = $('pf-title').value; rerender(); break;
       case 'pfav': S.pf.fav = S.pf.fav === v ? null : v; S.pf.title = $('pf-title').value; rerender(); break;
+      case 'gifopen': S.pf.gp = { kind: v, q: '', items: [], loading: false, err: '' }; await gifLoad(''); { const i = $('gifq'); if (i) i.focus(); } break;
+      case 'gifsearch': { const i = $('gifq'); S.pf.gp.q = i ? i.value.trim() : ''; await gifLoad(S.pf.gp.q); break; }
+      case 'gifpick': { const g = S.pf.gp, it = g && g.items[+v]; if (!it) break; const old = S.pf[g.kind]; if (old.preview) URL.revokeObjectURL(old.preview);
+        S.pf[g.kind] = { file: null, preview: null, ext: null, remove: false, gif: g.kind === 'avatar' ? it.avatar : it.banner }; S.pf.gp = null; rerender(); break; }
+      case 'gifclose': S.pf.gp = null; rerender(); break;
       case 'saveprofile': await saveProfile(); break;
       case 'canceledit': dropPreviews(); S.pf = null; S.notice = ''; S.screen = 'profile'; render(); break;
       case 'reportprofile': { t.disabled = true; try { await rpc('report_profile', { p_user: v }); t.textContent = 'Obrigado! Vamos revisar.'; } catch (e2) { t.disabled = false; } break; }
@@ -985,6 +1141,7 @@ document.addEventListener('click', async e => {
 });
 
 document.addEventListener('input', e => {
+  if (e.target.id === 'gifq' && S.pf && S.pf.gp) { S.pf.gp.q = e.target.value; return; }
   if (e.target.id !== 'ans') return;
   const q = S.screen === 'ask' && G ? G.q : (S.screen === 'duel' && D && D.st && D.st.status === 'question' ? D.st.question : null);
   const v = e.target.value.trim();
@@ -1023,6 +1180,7 @@ document.addEventListener('keydown', e => {
   else if (id === 'nick') { e.preventDefault(); $('pw').focus(); }
   else if (id === 'pw') { e.preventDefault(); doAuth(); }
   else if (id === 'pf-title') { e.preventDefault(); }
+  else if (id === 'gifq') { e.preventDefault(); if (S.pf && S.pf.gp) { S.pf.gp.q = e.target.value.trim(); gifLoad(S.pf.gp.q); } }
   else if (id === 'joincode') { e.preventDefault(); document.querySelector('[data-a="duelenter"]').click(); }
 });
 
